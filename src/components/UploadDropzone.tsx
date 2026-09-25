@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { AlertCircle, File as FileIcon, UploadCloud, X } from "lucide-react";
 import { ApiError, isCancelledUpload, uploadFile } from "../lib/api";
@@ -15,12 +15,25 @@ interface UploadItem {
   controller: AbortController;
 }
 
+export interface UploadDropzoneHandle {
+  /** Opens the native file picker — used by the mobile "+" menu. */
+  open: () => void;
+}
+
 interface UploadDropzoneProps {
   folderId: number | null;
   onUploaded: () => void;
 }
 
-export default function UploadDropzone({ folderId, onUploaded }: UploadDropzoneProps) {
+/**
+ * Drag-and-drop target for desktop/tablet. On mobile the visible drop area
+ * is hidden (`hidden sm:flex`) — the hidden file input still renders at the
+ * top level and can be opened imperatively, e.g. from the FAB's "+" menu.
+ */
+const UploadDropzone = forwardRef<UploadDropzoneHandle, UploadDropzoneProps>(function UploadDropzone(
+  { folderId, onUploaded },
+  ref,
+) {
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const { showToast } = useToast();
 
@@ -70,6 +83,8 @@ export default function UploadDropzone({ folderId, onUploaded }: UploadDropzoneP
     noKeyboard: true,
   });
 
+  useImperativeHandle(ref, () => ({ open }), [open]);
+
   const cancelUpload = (id: string) => {
     setUploads((current) => {
       current.find((upload) => upload.id === id)?.controller.abort();
@@ -79,16 +94,19 @@ export default function UploadDropzone({ folderId, onUploaded }: UploadDropzoneP
 
   return (
     <div>
+      {/* Rendered at the top level (not inside the sm:hidden drop area) so
+          ref.open() can still trigger the native picker on mobile. */}
+      <input {...getInputProps()} />
+
       <div
         {...getRootProps()}
         onClick={open}
-        className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 text-[13px] transition-colors ${
+        className={`hidden cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 text-[13px] transition-colors sm:flex ${
           isDragActive
             ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
             : "border-[var(--color-border-strong)] text-[var(--color-ink-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-ink)]"
         }`}
       >
-        <input {...getInputProps()} />
         <UploadCloud className="h-[16px] w-[16px]" />
         {isDragActive ? "Drop files to upload" : "Drag files here, or click to browse"}
       </div>
@@ -126,7 +144,7 @@ export default function UploadDropzone({ folderId, onUploaded }: UploadDropzoneP
                   type="button"
                   onClick={() => cancelUpload(upload.id)}
                   aria-label="Cancel upload"
-                  className="text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+                  className="shrink-0 rounded-full p-1.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -137,4 +155,6 @@ export default function UploadDropzone({ folderId, onUploaded }: UploadDropzoneP
       )}
     </div>
   );
-}
+});
+
+export default UploadDropzone;

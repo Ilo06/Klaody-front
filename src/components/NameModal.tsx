@@ -45,7 +45,7 @@ export default function NameModal({
           value={value}
           maxLength={255}
           onChange={(event) => setValue(event.target.value)}
-          className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2.5 text-[14px] text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)]"
+          className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-3 text-[16px] text-[var(--color-ink)] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2.5 sm:text-[14px]"
         />
         {error && (
           <p className="mt-2 flex items-center gap-1.5 text-[13px] text-[var(--color-danger)]">
@@ -53,18 +53,18 @@ export default function NameModal({
             {error}
           </p>
         )}
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md px-4 py-2 text-[14px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+            className="w-full rounded-md px-4 py-3 text-[15px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] sm:w-auto sm:py-2 sm:text-[14px]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!isValid || isSubmitting}
-            className="flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-[14px] font-semibold text-[var(--color-accent-contrast)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-3 text-[15px] font-semibold text-[var(--color-accent-contrast)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:py-2 sm:text-[14px]"
           >
             {isSubmitting && <Loader2 className="h-[14px] w-[14px] animate-spin" />}
             {confirmLabel}

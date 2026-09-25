@@ -67,6 +67,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.15s ease, color 0.15s ease;
+  /* Avoid the iOS/Android rubber-band overscroll flashing the page background. */
+  overscroll-behavior-y: none;
 }
 
 #root {
@@ -101,4 +103,12 @@ input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--color-ink);
   box-shadow: 0 0 0 1000px var(--color-surface) inset;
   transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Native tap feedback instead of the default gray highlight rectangle, and
+   no 300ms tap delay / accidental double-tap zoom on interactive elements. */
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }

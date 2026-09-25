@@ -44,7 +44,7 @@ export default function MoveModal({
           type="button"
           disabled={browsingId === null}
           onClick={() => setBrowsingId(currentFolder?.parentId ?? null)}
-          className="flex items-center gap-1 disabled:opacity-40"
+          className="-m-2 flex items-center gap-1 p-2 disabled:opacity-40"
         >
           <ArrowLeft className="h-[13px] w-[13px]" />
           Up
@@ -54,7 +54,7 @@ export default function MoveModal({
         </span>
       </div>
 
-      <div className="max-h-64 overflow-y-auto rounded-md border border-[var(--color-border)]">
+      <div className="max-h-[45vh] overflow-y-auto rounded-md border border-[var(--color-border)] sm:max-h-64">
         {subfoldersQuery.isLoading && (
           <div className="p-4 text-[13px] text-[var(--color-ink-muted)]">Loading…</div>
         )}
@@ -66,10 +66,10 @@ export default function MoveModal({
             key={folder.id}
             type="button"
             onClick={() => setBrowsingId(folder.id)}
-            className="flex w-full items-center gap-2 border-b border-[var(--color-border)] px-3.5 py-2.5 text-left text-[14px] last:border-0 hover:bg-[var(--color-border)]/30"
+            className="flex w-full items-center gap-2.5 border-b border-[var(--color-border)] px-3.5 py-3.5 text-left text-[15px] last:border-0 hover:bg-[var(--color-border)]/30 sm:py-2.5 sm:text-[14px]"
           >
-            <Folder className="h-4 w-4 text-[var(--color-ink-muted)]" />
-            {folder.name}
+            <Folder className="h-4 w-4 shrink-0 text-[var(--color-ink-muted)]" />
+            <span className="truncate">{folder.name}</span>
           </button>
         ))}
       </div>
@@ -81,11 +81,11 @@ export default function MoveModal({
         </p>
       )}
 
-      <div className="mt-6 flex justify-end gap-3">
+      <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md px-4 py-2 text-[14px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+          className="w-full rounded-md px-4 py-3 text-[15px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] sm:w-auto sm:py-2 sm:text-[14px]"
         >
           Cancel
         </button>
@@ -93,7 +93,7 @@ export default function MoveModal({
           type="button"
           disabled={isSubmitting || browsingId === disabledFolderId}
           onClick={() => onConfirm(browsingId)}
-          className="flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-[14px] font-semibold text-[var(--color-accent-contrast)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-3 text-[15px] font-semibold text-[var(--color-accent-contrast)] hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:py-2 sm:text-[14px]"
         >
           {isSubmitting && <Loader2 className="h-[14px] w-[14px] animate-spin" />}
           Move here

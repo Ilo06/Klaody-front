@@ -1,13 +1,25 @@
 import { useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { AlertCircle, ArrowUpDown, FolderPlus, Loader2, Search } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowUpDown,
+  FolderPlus,
+  Loader2,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  UploadCloud,
+} from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
 import Breadcrumbs from "../components/Breadcrumbs";
 import BrowserTable from "../components/BrowserTable";
-import UploadDropzone from "../components/UploadDropzone";
+import UploadDropzone, { type UploadDropzoneHandle } from "../components/UploadDropzone";
 import NameModal from "../components/NameModal";
 import MoveModal from "../components/MoveModal";
 import ConfirmDialog from "../components/ConfirmDialog";
+import Modal from "../components/Modal";
+import ActionSheet from "../components/ActionSheet";
+import Fab from "../components/Fab";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { ApiError, downloadFile, type FileMetadata, type FolderMetadata } from "../lib/api";
@@ -46,6 +58,57 @@ function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
 }
 
+function FilterControls({
+  mimeTypeFilter,
+  sortBy,
+  order,
+  onMimeTypeChange,
+  onSortByChange,
+  onToggleOrder,
+  stacked,
+}: {
+  mimeTypeFilter: string;
+  sortBy: string;
+  order: string;
+  onMimeTypeChange: (value: string) => void;
+  onSortByChange: (value: string) => void;
+  onToggleOrder: () => void;
+  stacked?: boolean;
+}) {
+  const fieldClass = stacked
+    ? "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3 text-[15px] outline-none focus:border-[var(--color-accent)]"
+    : "rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[13px] outline-none focus:border-[var(--color-accent)]";
+
+  return (
+    <div className={stacked ? "flex flex-col gap-4" : "flex items-center gap-3"}>
+      <select value={mimeTypeFilter} onChange={(event) => onMimeTypeChange(event.target.value)} className={fieldClass}>
+        {MIME_FILTERS.map((option) => (
+          <option key={option.label} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <select value={sortBy} onChange={(event) => onSortByChange(event.target.value)} className={fieldClass}>
+        <option value="uploadedAt">Date uploaded</option>
+        <option value="name">Name</option>
+        <option value="size">Size</option>
+      </select>
+
+      <button
+        type="button"
+        onClick={onToggleOrder}
+        className={`flex items-center justify-center gap-1.5 rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] ${
+          stacked ? "w-full py-3 text-[15px]" : "px-3 py-2 text-[13px]"
+        }`}
+      >
+        <ArrowUpDown className="h-[14px] w-[14px]" />
+        {order === "asc" ? "Ascending" : "Descending"}
+      </button>
+    </div>
+  );
+}
+
 export default function FilesPage() {
   const { folderId: folderIdParam } = useParams<{ folderId?: string }>();
   const parsedFolderId = folderIdParam ? Number(folderIdParam) : null;
@@ -54,6 +117,7 @@ export default function FilesPage() {
   const navigate = useNavigate();
   const { clearSession } = useAuth();
   const { showToast } = useToast();
+  const uploadRef = useRef<UploadDropzoneHandle>(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const nameFilter = searchParams.get("name") ?? "";
@@ -66,6 +130,8 @@ export default function FilesPage() {
 
   const [modal, setModal] = useState<ModalState>(null);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
 
   const allFoldersQuery = useAllFolders();
   const foldersById = useMemo(() => {
@@ -227,7 +293,7 @@ export default function FilesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
-      <header className="flex items-center justify-between border-b border-[var(--color-border)] px-8 py-5">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
         <span className="font-[var(--font-serif)] text-[20px] font-bold tracking-tight">klaody</span>
         <div className="flex items-center gap-4">
           <button
@@ -241,13 +307,15 @@ export default function FilesPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-8 sm:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <Breadcrumbs path={breadcrumbPath} onNavigate={goToFolder} />
+      <main className="mx-auto max-w-5xl px-5 pb-28 pt-6 sm:px-8 sm:pb-8 sm:pt-8">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <Breadcrumbs path={breadcrumbPath} onNavigate={goToFolder} />
+          </div>
           <button
             type="button"
             onClick={() => setModal({ type: "new-folder" })}
-            className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-medium hover:border-[var(--color-border-strong)]"
+            className="hidden shrink-0 items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-medium hover:border-[var(--color-border-strong)] sm:flex"
           >
             <FolderPlus className="h-[15px] w-[15px]" />
             New folder
@@ -255,56 +323,43 @@ export default function FilesPage() {
         </div>
 
         <div className="mt-6">
-          <UploadDropzone folderId={currentFolderId} onUploaded={() => filesQuery.refetch()} />
+          <UploadDropzone ref={uploadRef} folderId={currentFolderId} onUploaded={() => filesQuery.refetch()} />
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[200px] flex-1">
+          <div className="relative min-w-[160px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
             <input
               type="text"
               value={searchInput}
               onChange={(event) => handleSearchChange(event.target.value)}
               placeholder="Search by name"
-              className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2 pl-9 pr-3 text-[13px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)]"
+              className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
             />
           </div>
 
-          <select
-            value={mimeTypeFilter}
-            onChange={(event) => updateFilter("mimeType", event.target.value)}
-            className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[13px] outline-none focus:border-[var(--color-accent)]"
-          >
-            {MIME_FILTERS.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={sortBy}
-            onChange={(event) => updateFilter("sortBy", event.target.value)}
-            className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[13px] outline-none focus:border-[var(--color-accent)]"
-          >
-            <option value="uploadedAt">Date uploaded</option>
-            <option value="name">Name</option>
-            <option value="size">Size</option>
-          </select>
-
           <button
             type="button"
-            onClick={() => updateFilter("order", order === "asc" ? "desc" : "asc")}
-            aria-label="Toggle sort direction"
-            title={order === "asc" ? "Ascending" : "Descending"}
-            className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3 py-2 text-[13px] hover:border-[var(--color-border-strong)]"
+            onClick={() => setFiltersOpen(true)}
+            aria-label="Filters"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] sm:hidden"
           >
-            <ArrowUpDown className="h-[14px] w-[14px]" />
-            {order === "asc" ? "Asc" : "Desc"}
+            <SlidersHorizontal className="h-[16px] w-[16px]" />
           </button>
+
+          <div className="hidden sm:flex">
+            <FilterControls
+              mimeTypeFilter={mimeTypeFilter}
+              sortBy={sortBy}
+              order={order}
+              onMimeTypeChange={(value) => updateFilter("mimeType", value)}
+              onSortByChange={(value) => updateFilter("sortBy", value)}
+              onToggleOrder={() => updateFilter("order", order === "asc" ? "desc" : "asc")}
+            />
+          </div>
         </div>
 
-        <div className="mt-5 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4">
+        <div className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:px-5">
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 py-20 text-[14px] text-[var(--color-ink-muted)]">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -333,6 +388,40 @@ export default function FilesPage() {
           )}
         </div>
       </main>
+
+      <Fab onClick={() => setFabOpen(true)} label="Add" icon={<Plus className="h-6 w-6" />} />
+
+      {fabOpen && (
+        <ActionSheet
+          title="Add"
+          onClose={() => setFabOpen(false)}
+          actions={[
+            { label: "Upload files", icon: UploadCloud, onClick: () => uploadRef.current?.open() },
+            { label: "New folder", icon: FolderPlus, onClick: () => setModal({ type: "new-folder" }) },
+          ]}
+        />
+      )}
+
+      {filtersOpen && (
+        <Modal title="Filters" onClose={() => setFiltersOpen(false)}>
+          <FilterControls
+            mimeTypeFilter={mimeTypeFilter}
+            sortBy={sortBy}
+            order={order}
+            onMimeTypeChange={(value) => updateFilter("mimeType", value)}
+            onSortByChange={(value) => updateFilter("sortBy", value)}
+            onToggleOrder={() => updateFilter("order", order === "asc" ? "desc" : "asc")}
+            stacked
+          />
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(false)}
+            className="mt-6 w-full rounded-md bg-[var(--color-accent)] py-3 text-[15px] font-semibold text-[var(--color-accent-contrast)] hover:bg-[var(--color-accent-hover)]"
+          >
+            Done
+          </button>
+        </Modal>
+      )}
 
       {modal?.type === "new-folder" && (
         <NameModal

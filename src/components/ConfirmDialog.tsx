@@ -29,11 +29,11 @@ export default function ConfirmDialog({
           {error}
         </p>
       )}
-      <div className="mt-6 flex justify-end gap-3">
+      <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md px-4 py-2 text-[14px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+          className="w-full rounded-md px-4 py-3 text-[15px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] sm:w-auto sm:py-2 sm:text-[14px]"
         >
           Cancel
         </button>
@@ -41,7 +41,7 @@ export default function ConfirmDialog({
           type="button"
           disabled={isSubmitting}
           onClick={onConfirm}
-          className="flex items-center gap-2 rounded-md bg-[var(--color-danger)] px-4 py-2 text-[14px] font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--color-danger)] px-4 py-3 text-[15px] font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:py-2 sm:text-[14px]"
         >
           {isSubmitting && <Loader2 className="h-[14px] w-[14px] animate-spin" />}
           {confirmLabel}

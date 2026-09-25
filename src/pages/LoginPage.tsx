@@ -45,15 +45,15 @@ export default function LoginPage() {
   };
 
   const inputClass =
-    "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2.5 text-[14px] text-[var(--color-ink)] outline-none transition-colors placeholder:text-[var(--color-ink-muted)]/70 focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)]";
+    "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-3 text-[16px] text-[var(--color-ink)] outline-none transition-colors placeholder:text-[var(--color-ink-muted)]/70 focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2.5 sm:text-[14px]";
 
   const labelClass = "mb-2 block text-[13px] font-medium text-[var(--color-ink)]";
 
   const errorTextClass = "mt-2 flex items-center gap-1.5 text-[13px] text-[var(--color-danger)]";
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-5 py-16">
-      <div className="absolute right-6 top-6">
+    <div className="relative flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-5 py-16 pb-[max(4rem,env(safe-area-inset-bottom))] pt-[max(4rem,env(safe-area-inset-top))]">
+      <div className="absolute right-5 top-[max(1.5rem,env(safe-area-inset-top))]">
         <ThemeToggle />
       </div>
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
           </span>
         </div>
 
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-9 sm:p-10">
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-7 sm:p-10">
           <h1 className="text-[28px]">Sign in</h1>
           <p className="mt-2 text-[14px] text-[var(--color-ink-muted)]">Access your files</p>
 
@@ -100,14 +100,14 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   aria-invalid={errors.password ? "true" : "false"}
-                  className={`${inputClass} pr-10`}
+                  className={`${inputClass} pr-11`}
                   placeholder="••••••••"
                   {...register("password")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
+                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   tabIndex={-1}
                 >
@@ -136,7 +136,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--color-accent)] py-3 text-[15px] font-semibold text-[var(--color-accent-contrast)] transition-colors hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--color-accent)] py-3.5 text-[15px] font-semibold text-[var(--color-accent-contrast)] transition-colors hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting && <Loader2 className="h-[15px] w-[15px] animate-spin" />}
               {isSubmitting ? "Signing in…" : "Sign in"}

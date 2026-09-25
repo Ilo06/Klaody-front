@@ -2,10 +2,12 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { AUTH_EXPIRED_EVENT } from "../lib/api";
 
 const TOKEN_KEY = "klaody.token";
 const EXPIRES_AT_KEY = "klaody.tokenExpiresAt";
@@ -50,6 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(EXPIRES_AT_KEY);
     setToken(null);
   }, []);
+
+  // The API client dispatches this on any 401, e.g. once the token expires
+  // mid-session — treat it the same as an explicit logout.
+  useEffect(() => {
+    window.addEventListener(AUTH_EXPIRED_EVENT, clearSession);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, clearSession);
+  }, [clearSession]);
 
   const value = useMemo<AuthContextValue>(
     () => ({ token, isAuthenticated: token !== null, setSession, clearSession }),

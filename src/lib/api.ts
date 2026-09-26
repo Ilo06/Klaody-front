@@ -250,6 +250,12 @@ export interface TrashListing {
   folders: FolderMetadata[];
 }
 
+/** At most 1000 ids (files + folders combined); duplicates are ignored by the API. */
+export interface BulkItemsRequest {
+  fileIds?: number[];
+  folderIds?: number[];
+}
+
 export interface BulkItemRef {
   type: "file" | "folder";
   id: number;
@@ -276,6 +282,12 @@ export async function listTrash(params: ListTrashParams = {}): Promise<TrashList
   return data;
 }
 
+/** Bulk equivalent of `deleteFile`/`deleteFolder`. Folders are trashed recursively. */
+export async function bulkMoveToTrash(items: BulkItemsRequest): Promise<BulkResult> {
+  const { data } = await apiClient.post<BulkResult>("/trash", items);
+  return data;
+}
+
 export async function restoreFile(id: number): Promise<FileMetadata> {
   const { data } = await apiClient.post<FileMetadata>(`/trash/files/${id}/restore`);
   return data;
@@ -283,6 +295,12 @@ export async function restoreFile(id: number): Promise<FileMetadata> {
 
 export async function restoreFolder(id: number): Promise<FolderMetadata> {
   const { data } = await apiClient.post<FolderMetadata>(`/trash/folders/${id}/restore`);
+  return data;
+}
+
+/** Bulk equivalent of `restoreFile`/`restoreFolder`. Folders are restored before their contents. */
+export async function bulkRestore(items: BulkItemsRequest): Promise<BulkResult> {
+  const { data } = await apiClient.post<BulkResult>("/trash/restore", items);
   return data;
 }
 

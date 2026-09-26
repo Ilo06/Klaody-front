@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  bulkMoveToTrash,
   createFolder,
   createShareLink,
   deleteFile,
@@ -10,6 +11,7 @@ import {
   moveFolder,
   renameFile,
   renameFolder,
+  type BulkItemsRequest,
   type FileMetadata,
   type FolderMetadata,
   type ListFilesParams,
@@ -102,6 +104,18 @@ export function useDeleteFolder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["folders"] });
       queryClient.invalidateQueries({ queryKey: ["files"] });
+    },
+  });
+}
+
+/** Bulk equivalent of `useDeleteFile`/`useDeleteFolder` — moves several items to the trash at once. */
+export function useBulkDelete() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (items: BulkItemsRequest) => bulkMoveToTrash(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["files"] });
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
     },
   });
 }

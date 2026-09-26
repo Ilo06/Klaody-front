@@ -71,7 +71,15 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[var(--color-surface)] sm:items-center sm:justify-center sm:bg-black/50 sm:p-6">
-      <div className="flex h-full w-full flex-col overflow-hidden sm:h-auto sm:max-h-[85vh] sm:max-w-3xl sm:rounded-xl sm:border sm:border-[var(--color-border)] sm:bg-[var(--color-surface)] sm:shadow-2xl">
+      {/*
+        `sm:h-[85vh]` (a definite height) instead of `sm:h-auto` + `max-h`.
+        With only `h-auto`, this container had no resolvable height, so the
+        `flex-1` preview area below and the PDF iframe's `h-full` had nothing
+        to size against and collapsed to their intrinsic (tiny) height on
+        desktop. Giving the card a real height fixes that for every preview
+        type, PDFs included, and `max-h` still protects short viewports.
+      */}
+      <div className="flex h-full w-full flex-col overflow-hidden sm:h-[85vh] sm:max-h-[85vh] sm:w-[90vw] sm:max-w-4xl sm:rounded-xl sm:border sm:border-[var(--color-border)] sm:bg-[var(--color-surface)] sm:shadow-2xl">
         <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--color-ink-muted)]" />

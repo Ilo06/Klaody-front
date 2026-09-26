@@ -1,28 +1,11 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import {
-  Download,
-  FileAudio,
-  FileText,
-  FileVideo,
-  Folder,
-  FolderInput,
-  Image as ImageIcon,
-  MoreVertical,
-  Pencil,
-  Trash2,
-  type LucideIcon,
-} from "lucide-react";
+import { Download, Folder, FolderInput, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
+import FilePreviewModal from "./FilePreviewModal";
 import type { FileMetadata, FolderMetadata } from "../lib/api";
+import { fileIcon } from "../lib/fileIcon";
 import { formatBytes } from "../lib/format";
-
-function fileIcon(mimeType: string): LucideIcon {
-  if (mimeType.startsWith("image/")) return ImageIcon;
-  if (mimeType.startsWith("audio/")) return FileAudio;
-  if (mimeType.startsWith("video/")) return FileVideo;
-  return FileText;
-}
 
 interface BrowserTableProps {
   folders: FolderMetadata[];
@@ -39,12 +22,7 @@ interface BrowserTableProps {
 
 type ActiveSheet = { kind: "folder"; folder: FolderMetadata } | { kind: "file"; file: FileMetadata } | null;
 
-/**
- * Renders folders and files as a single tap-friendly list rather than a
- * table: no columns to lose on a narrow screen, and each row exposes just
- * one "more" button that opens a bottom action sheet instead of a row of
- * small icon buttons.
- */
+
 export default function BrowserTable({
   folders,
   files,
@@ -58,6 +36,7 @@ export default function BrowserTable({
   onDeleteFile,
 }: BrowserTableProps) {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
+  const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
 
   if (folders.length === 0 && files.length === 0) {
     return (
@@ -124,8 +103,8 @@ export default function BrowserTable({
             >
               <button
                 type="button"
-                onClick={() => onDownloadFile(file)}
-                aria-label={`Download ${file.name}`}
+                onClick={() => setPreviewFile(file)}
+                aria-label={`Preview ${file.name}`}
                 className="flex min-w-0 flex-1 items-center gap-3 py-3.5 text-left"
               >
                 <Icon className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
@@ -161,6 +140,15 @@ export default function BrowserTable({
           title={activeSheet.file.name}
           actions={fileActions(activeSheet.file)}
           onClose={() => setActiveSheet(null)}
+        />
+      )}
+
+      {previewFile && (
+        <FilePreviewModal
+          file={previewFile}
+          onClose={() => setPreviewFile(null)}
+          onDownload={() => onDownloadFile(previewFile)}
+          actions={fileActions(previewFile).filter((action) => action.label !== "Download")}
         />
       )}
     </>

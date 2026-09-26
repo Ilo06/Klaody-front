@@ -32,6 +32,15 @@ export interface FolderMetadata {
   deletedAt: string | null;
 }
 
+export interface StorageInfo {
+  totalBytes: number;
+  freeBytes: number;
+  availableBytes: number;
+  reservedBytes: number;
+  usableBytes: number;
+  usableGB: number;
+}
+
 export interface FileUploadResponse {
   id: number;
   name: string;
@@ -313,6 +322,13 @@ export async function restoreAll(): Promise<BulkResult> {
 /** Permanently deletes everything in the trash, file contents included. Cannot be undone. */
 export async function emptyTrash(): Promise<EmptyTrashResult> {
   const { data } = await apiClient.delete<EmptyTrashResult>("/trash");
+  return data;
+}
+
+// --- System ---------------------------------------------------------------
+
+export async function getStorageInfo(): Promise<StorageInfo> {
+  const { data } = await apiClient.get<StorageInfo>("/storage");
   return data;
 }
 

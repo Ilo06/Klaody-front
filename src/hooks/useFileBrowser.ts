@@ -5,6 +5,7 @@ import {
   createShareLink,
   deleteFile,
   deleteFolder,
+  getStorageInfo,
   listFiles,
   listFolders,
   moveFile,
@@ -15,7 +16,17 @@ import {
   type FileMetadata,
   type FolderMetadata,
   type ListFilesParams,
+  type StorageInfo,
 } from "../lib/api";
+
+/** Disk usage for the storage volume. Refreshed manually after uploads/emptying the trash. */
+export function useStorageInfo() {
+  return useQuery<StorageInfo>({
+    queryKey: ["storage"],
+    queryFn: getStorageInfo,
+    staleTime: 30_000,
+  });
+}
 
 export function useFiles(folderId: number | null, filters: Omit<ListFilesParams, "folderId">) {
   return useQuery<FileMetadata[]>({

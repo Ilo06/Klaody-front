@@ -576,6 +576,17 @@ export default function FilesPage() {
         </>
       )}
 
+      {/* Persistent, bottom-anchored on every breakpoint — unlike Fab, which is mobile-only. */}
+      <button
+        type="button"
+        onClick={() => navigate("/trash")}
+        aria-label="Trash"
+        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-40 flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
+      >
+        <Trash2 className="h-[14px] w-[14px]" />
+        Trash
+      </button>
+
       {fabOpen && (
         <ActionSheet
           title="Add"

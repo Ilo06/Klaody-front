@@ -165,8 +165,18 @@ export async function uploadFile(
   return data;
 }
 
+async function fetchFileResponse(id: number) {
+  return apiClient.get<Blob>(`/files/${id}`, { responseType: "blob" });
+}
+
+//Fetches a file's bytes without triggering a save — for in-app preview
+export async function fetchFileBlob(id: number): Promise<Blob> {
+  const response = await fetchFileResponse(id);
+  return response.data;
+}
+
 export async function downloadFile(id: number, fallbackName: string): Promise<void> {
-  const response = await apiClient.get<Blob>(`/files/${id}`, { responseType: "blob" });
+  const response = await fetchFileResponse(id);
   const filename = parseFilenameFromDisposition(response.headers["content-disposition"]) ?? fallbackName;
   triggerBrowserDownload(response.data, filename);
 }

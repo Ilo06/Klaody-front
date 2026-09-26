@@ -1,13 +1,20 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowLeft, Folder, Loader2, RotateCcw, Search, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckSquare, Folder, Loader2, RotateCcw, Search, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import ThemeToggle from "../components/ThemeToggle";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { ApiError, type FileMetadata, type FolderMetadata } from "../lib/api";
-import { useEmptyTrash, useRestoreAll, useRestoreFile, useRestoreFolder, useTrash } from "../hooks/useTrash";
+import {
+  useBulkRestore,
+  useEmptyTrash,
+  useRestoreAll,
+  useRestoreFile,
+  useRestoreFolder,
+  useTrash,
+} from "../hooks/useTrash";
 import { fileIcon } from "../lib/fileIcon";
 import { formatBytes } from "../lib/format";
 
@@ -33,6 +40,10 @@ export default function TrashPage() {
   const [emptyError, setEmptyError] = useState<string | null>(null);
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
+  const [selectedFolderIds, setSelectedFolderIds] = useState<Set<number>>(new Set());
+
   const trashQuery = useTrash({
     name: nameFilter || undefined,
     type: typeFilter || undefined,
@@ -41,7 +52,39 @@ export default function TrashPage() {
   const restoreFileMutation = useRestoreFile();
   const restoreFolderMutation = useRestoreFolder();
   const restoreAllMutation = useRestoreAll();
+  const bulkRestoreMutation = useBulkRestore();
   const emptyTrashMutation = useEmptyTrash();
+
+  // The selection only makes sense for what's currently on screen.
+  useEffect(() => {
+    setSelectionMode(false);
+    setSelectedFileIds(new Set());
+    setSelectedFolderIds(new Set());
+  }, [nameFilter, typeFilter]);
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedFileIds(new Set());
+    setSelectedFolderIds(new Set());
+  };
+
+  const toggleFileSelected = (file: FileMetadata) => {
+    setSelectedFileIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(file.id)) next.delete(file.id);
+      else next.add(file.id);
+      return next;
+    });
+  };
+
+  const toggleFolderSelected = (folder: FolderMetadata) => {
+    setSelectedFolderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(folder.id)) next.delete(folder.id);
+      else next.add(folder.id);
+      return next;
+    });
+  };
 
   const handleSearchChange = (value: string) => {
     setNameInput(value);
@@ -77,6 +120,25 @@ export default function TrashPage() {
     });
   };
 
+  const handleBulkRestore = () => {
+    bulkRestoreMutation.mutate(
+      { fileIds: Array.from(selectedFileIds), folderIds: Array.from(selectedFolderIds) },
+      {
+        onSuccess: (result) => {
+          const failed = result.failed.length;
+          showToast(
+            failed > 0
+              ? `Restored ${result.succeeded.length}, ${failed} could not be restored`
+              : `Restored ${result.succeeded.length} item(s)`,
+            failed > 0 ? "error" : "success",
+          );
+          exitSelectionMode();
+        },
+        onError: (err) => showToast(errorMessage(err, "Could not restore the selected items"), "error"),
+      },
+    );
+  };
+
   const handleEmptyTrash = () => {
     setEmptyError(null);
     emptyTrashMutation.mutate(undefined, {
@@ -91,6 +153,21 @@ export default function TrashPage() {
   const folders = trashQuery.data?.folders ?? [];
   const files = trashQuery.data?.files ?? [];
   const isEmpty = folders.length === 0 && files.length === 0;
+  const selectedCount = selectedFileIds.size + selectedFolderIds.size;
+  const allVisibleSelected =
+    folders.length + files.length > 0 &&
+    folders.every((folder) => selectedFolderIds.has(folder.id)) &&
+    files.every((file) => selectedFileIds.has(file.id));
+
+  const handleSelectAllVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedFileIds(new Set());
+      setSelectedFolderIds(new Set());
+    } else {
+      setSelectedFileIds(new Set(files.map((file) => file.id)));
+      setSelectedFolderIds(new Set(folders.map((folder) => folder.id)));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
@@ -149,29 +226,76 @@ export default function TrashPage() {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[160px] flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
-            <input
-              type="text"
-              value={nameInput}
-              onChange={(event) => handleSearchChange(event.target.value)}
-              placeholder="Search trash"
-              className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
-            />
+        {selectionMode ? (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSelectAllVisible}
+                className="text-[13px] font-medium text-[var(--color-accent)] hover:underline"
+              >
+                {allVisibleSelected ? "Clear" : "Select all"}
+              </button>
+              <span className="text-[13px] text-[var(--color-ink-muted)]">{selectedCount} selected</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={exitSelectionMode}
+                className="rounded-md px-3 py-1.5 text-[13px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkRestore}
+                disabled={selectedCount === 0 || bulkRestoreMutation.isPending}
+                className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3.5 py-1.5 text-[13px] font-medium hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {bulkRestoreMutation.isPending ? (
+                  <Loader2 className="h-[14px] w-[14px] animate-spin" />
+                ) : (
+                  <RotateCcw className="h-[14px] w-[14px]" />
+                )}
+                Restore
+              </button>
+            </div>
           </div>
-          <select
-            value={typeFilter}
-            onChange={(event) => setTypeFilter(event.target.value as "" | "file" | "folder")}
-            className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[13px] outline-none focus:border-[var(--color-accent)]"
-          >
-            {TYPE_FILTERS.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        ) : (
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="relative min-w-[160px] flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(event) => handleSearchChange(event.target.value)}
+                placeholder="Search trash"
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
+              />
+            </div>
+            <select
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value as "" | "file" | "folder")}
+              className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[13px] outline-none focus:border-[var(--color-accent)]"
+            >
+              {TYPE_FILTERS.map((option) => (
+                <option key={option.label} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setSelectionMode(true)}
+              disabled={isEmpty}
+              aria-label="Select items"
+              title="Select"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <CheckSquare className="h-[14px] w-[14px]" />
+            </button>
+          </div>
+        )}
 
         <div className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:px-5">
           {trashQuery.isLoading ? (
@@ -196,55 +320,93 @@ export default function TrashPage() {
             </div>
           ) : (
             <ul>
-              {folders.map((folder) => (
-                <li
-                  key={`folder-${folder.id}`}
-                  className="flex items-center gap-1 border-b border-[var(--color-border)] py-3.5 last:border-0"
-                >
-                  <Folder className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px]">{folder.name}</span>
-                    <span className="block truncate text-[12px] text-[var(--color-ink-muted)]">
-                      Trashed {folder.deletedAt ? format(new Date(folder.deletedAt), "MMM d, yyyy") : "—"}
-                    </span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRestoreFolder(folder)}
-                    disabled={restoreFolderMutation.isPending}
-                    aria-label={`Restore ${folder.name}`}
-                    title="Restore"
-                    className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)] disabled:opacity-50"
+              {folders.map((folder) => {
+                const isSelected = selectedFolderIds.has(folder.id);
+                return (
+                  <li
+                    key={`folder-${folder.id}`}
+                    className="flex items-center gap-1 border-b border-[var(--color-border)] py-3.5 last:border-0"
                   >
-                    <RotateCcw className="h-5 w-5" />
-                  </button>
-                </li>
-              ))}
+                    {selectionMode && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleFolderSelected(folder)}
+                        aria-label={`Select ${folder.name}`}
+                        className="mr-3 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+                      />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => (selectionMode ? toggleFolderSelected(folder) : undefined)}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      <Folder className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px]">{folder.name}</span>
+                        <span className="block truncate text-[12px] text-[var(--color-ink-muted)]">
+                          Trashed {folder.deletedAt ? format(new Date(folder.deletedAt), "MMM d, yyyy") : "—"}
+                        </span>
+                      </span>
+                    </button>
+                    {!selectionMode && (
+                      <button
+                        type="button"
+                        onClick={() => handleRestoreFolder(folder)}
+                        disabled={restoreFolderMutation.isPending}
+                        aria-label={`Restore ${folder.name}`}
+                        title="Restore"
+                        className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)] disabled:opacity-50"
+                      >
+                        <RotateCcw className="h-5 w-5" />
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
               {files.map((file) => {
                 const Icon = fileIcon(file.mimeType);
+                const isSelected = selectedFileIds.has(file.id);
                 return (
                   <li
                     key={`file-${file.id}`}
                     className="flex items-center gap-1 border-b border-[var(--color-border)] py-3.5 last:border-0"
                   >
-                    <Icon className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[15px]">{file.name}</span>
-                      <span className="block truncate text-[12px] text-[var(--color-ink-muted)]">
-                        {formatBytes(file.size)} · Trashed{" "}
-                        {file.deletedAt ? format(new Date(file.deletedAt), "MMM d, yyyy") : "—"}
-                      </span>
-                    </span>
+                    {selectionMode && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleFileSelected(file)}
+                        aria-label={`Select ${file.name}`}
+                        className="mr-3 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+                      />
+                    )}
                     <button
                       type="button"
-                      onClick={() => handleRestoreFile(file)}
-                      disabled={restoreFileMutation.isPending}
-                      aria-label={`Restore ${file.name}`}
-                      title="Restore"
-                      className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)] disabled:opacity-50"
+                      onClick={() => (selectionMode ? toggleFileSelected(file) : undefined)}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <RotateCcw className="h-5 w-5" />
+                      <Icon className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[15px]">{file.name}</span>
+                        <span className="block truncate text-[12px] text-[var(--color-ink-muted)]">
+                          {formatBytes(file.size)} · Trashed{" "}
+                          {file.deletedAt ? format(new Date(file.deletedAt), "MMM d, yyyy") : "—"}
+                        </span>
+                      </span>
                     </button>
+                    {!selectionMode && (
+                      <button
+                        type="button"
+                        onClick={() => handleRestoreFile(file)}
+                        disabled={restoreFileMutation.isPending}
+                        aria-label={`Restore ${file.name}`}
+                        title="Restore"
+                        className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)] disabled:opacity-50"
+                      >
+                        <RotateCcw className="h-5 w-5" />
+                      </button>
+                    )}
                   </li>
                 );
               })}

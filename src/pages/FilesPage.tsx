@@ -1,8 +1,9 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowUpDown,
+  CheckSquare,
   FolderPlus,
   Loader2,
   Plus,
@@ -34,6 +35,7 @@ import {
 } from "../lib/api";
 import {
   useAllFolders,
+  useBulkDelete,
   useCreateFolder,
   useCreateShareLink,
   useDeleteFile,
@@ -145,6 +147,12 @@ export default function FilesPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
 
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
+  const [selectedFolderIds, setSelectedFolderIds] = useState<Set<number>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
+
   const allFoldersQuery = useAllFolders();
   const foldersById = useMemo(() => {
     const map = new Map<number, FolderMetadata>();
@@ -177,7 +185,78 @@ export default function FilesPage() {
   const moveFolderMutation = useMoveFolder();
   const deleteFileMutation = useDeleteFile();
   const deleteFolderMutation = useDeleteFolder();
+  const bulkDeleteMutation = useBulkDelete();
   const createShareLinkMutation = useCreateShareLink();
+
+  // The selection only makes sense for what's currently on screen.
+  useEffect(() => {
+    setSelectionMode(false);
+    setSelectedFileIds(new Set());
+    setSelectedFolderIds(new Set());
+  }, [currentFolderId]);
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedFileIds(new Set());
+    setSelectedFolderIds(new Set());
+  };
+
+  const toggleFileSelected = (file: FileMetadata) => {
+    setSelectedFileIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(file.id)) next.delete(file.id);
+      else next.add(file.id);
+      return next;
+    });
+  };
+
+  const toggleFolderSelected = (folder: FolderMetadata) => {
+    setSelectedFolderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(folder.id)) next.delete(folder.id);
+      else next.add(folder.id);
+      return next;
+    });
+  };
+
+  const visibleFolders = foldersQuery.data ?? [];
+  const visibleFiles = filesQuery.data ?? [];
+  const selectedCount = selectedFileIds.size + selectedFolderIds.size;
+  const allVisibleSelected =
+    visibleFolders.length + visibleFiles.length > 0 &&
+    visibleFolders.every((folder) => selectedFolderIds.has(folder.id)) &&
+    visibleFiles.every((file) => selectedFileIds.has(file.id));
+
+  const handleSelectAllVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedFileIds(new Set());
+      setSelectedFolderIds(new Set());
+    } else {
+      setSelectedFileIds(new Set(visibleFiles.map((file) => file.id)));
+      setSelectedFolderIds(new Set(visibleFolders.map((folder) => folder.id)));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    setBulkDeleteError(null);
+    bulkDeleteMutation.mutate(
+      { fileIds: Array.from(selectedFileIds), folderIds: Array.from(selectedFolderIds) },
+      {
+        onSuccess: (result) => {
+          const failed = result.failed.length;
+          showToast(
+            failed > 0
+              ? `Moved ${result.succeeded.length} item(s) to trash, ${failed} failed`
+              : `Moved ${result.succeeded.length} item(s) to trash`,
+            failed > 0 ? "error" : "success",
+          );
+          setBulkDeleteOpen(false);
+          exitSelectionMode();
+        },
+        onError: (err) => setBulkDeleteError(errorMessage(err, "Could not delete the selected items")),
+      },
+    );
+  };
 
   const goToFolder = (folderId: number | null) => {
     navigate(folderId === null ? "/files" : `/files/${folderId}`);
@@ -320,7 +399,7 @@ export default function FilesPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
-        <span className="text-[23px] font-bold tracking-tight" style={{ fontFamily: "var(--font-serif)" }}>
+        <span className="text-[20px] font-bold tracking-tight" style={{ fontFamily: "var(--font-serif)" }}>
           klaody
         </span>
         <div className="flex items-center gap-4">
@@ -354,38 +433,82 @@ export default function FilesPage() {
           <UploadDropzone ref={uploadRef} folderId={currentFolderId} onUploaded={() => filesQuery.refetch()} />
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[160px] flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(event) => handleSearchChange(event.target.value)}
-              placeholder="Search by name"
-              className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
-            />
+        {selectionMode ? (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSelectAllVisible}
+                className="text-[13px] font-medium text-[var(--color-accent)] hover:underline"
+              >
+                {allVisibleSelected ? "Clear" : "Select all"}
+              </button>
+              <span className="text-[13px] text-[var(--color-ink-muted)]">{selectedCount} selected</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={exitSelectionMode}
+                className="rounded-md px-3 py-1.5 text-[13px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkDeleteOpen(true)}
+                disabled={selectedCount === 0}
+                className="flex items-center gap-1.5 rounded-md border border-[var(--color-danger-border)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Trash2 className="h-[14px] w-[14px]" />
+                Delete
+              </button>
+            </div>
           </div>
+        ) : (
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="relative min-w-[160px] flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(event) => handleSearchChange(event.target.value)}
+                placeholder="Search by name"
+                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
+              />
+            </div>
 
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(true)}
-            aria-label="Filters"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] sm:hidden"
-          >
-            <SlidersHorizontal className="h-[16px] w-[16px]" />
-          </button>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              aria-label="Filters"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] sm:hidden"
+            >
+              <SlidersHorizontal className="h-[16px] w-[16px]" />
+            </button>
 
-          <div className="hidden sm:flex">
-            <FilterControls
-              mimeTypeFilter={mimeTypeFilter}
-              sortBy={sortBy}
-              order={order}
-              onMimeTypeChange={(value) => updateFilter("mimeType", value)}
-              onSortByChange={(value) => updateFilter("sortBy", value)}
-              onToggleOrder={() => updateFilter("order", order === "asc" ? "desc" : "asc")}
-            />
+            <div className="hidden sm:flex">
+              <FilterControls
+                mimeTypeFilter={mimeTypeFilter}
+                sortBy={sortBy}
+                order={order}
+                onMimeTypeChange={(value) => updateFilter("mimeType", value)}
+                onSortByChange={(value) => updateFilter("sortBy", value)}
+                onToggleOrder={() => updateFilter("order", order === "asc" ? "desc" : "asc")}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectionMode(true)}
+              disabled={visibleFolders.length + visibleFiles.length === 0}
+              aria-label="Select items"
+              title="Select"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <CheckSquare className="h-[14px] w-[14px]" />
+            </button>
           </div>
-        </div>
+        )}
 
         <div className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:px-5">
           {isLoading ? (
@@ -402,8 +525,8 @@ export default function FilesPage() {
             </div>
           ) : (
             <BrowserTable
-              folders={foldersQuery.data ?? []}
-              files={filesQuery.data ?? []}
+              folders={visibleFolders}
+              files={visibleFiles}
               onOpenFolder={(folder) => goToFolder(folder.id)}
               onRenameFolder={(folder) => setModal({ type: "rename-folder", folder })}
               onMoveFolder={(folder) => setModal({ type: "move-folder", folder })}
@@ -413,23 +536,32 @@ export default function FilesPage() {
               onMoveFile={(file) => setModal({ type: "move-file", file })}
               onDeleteFile={(file) => setModal({ type: "delete-file", file })}
               onShareFile={(file) => setModal({ type: "share-file", file })}
+              selectionMode={selectionMode}
+              selectedFileIds={selectedFileIds}
+              selectedFolderIds={selectedFolderIds}
+              onToggleFileSelected={toggleFileSelected}
+              onToggleFolderSelected={toggleFolderSelected}
             />
           )}
         </div>
       </main>
 
-      <Fab onClick={() => setFabOpen(true)} label="Add" icon={<Plus className="h-6 w-6" />} />
+      {!selectionMode && (
+        <>
+          <Fab onClick={() => setFabOpen(true)} label="Add" icon={<Plus className="h-6 w-6" />} />
 
-      {/* Persistent, bottom-anchored on every breakpoint — unlike Fab, which is mobile-only. */}
-      <button
-        type="button"
-        onClick={() => navigate("/trash")}
-        aria-label="Trash"
-        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-40 flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
-      >
-        <Trash2 className="h-[14px] w-[14px]" />
-        Trash
-      </button>
+          {/* Persistent, bottom-anchored on every breakpoint — unlike Fab, which is mobile-only. */}
+          <button
+            type="button"
+            onClick={() => navigate("/trash")}
+            aria-label="Trash"
+            className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-40 flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
+          >
+            <Trash2 className="h-[14px] w-[14px]" />
+            Trash
+          </button>
+        </>
+      )}
 
       {fabOpen && (
         <ActionSheet
@@ -552,6 +684,20 @@ export default function FilesPage() {
           error={modalError}
           onCancel={closeModal}
           onCreate={handleCreateShare}
+        />
+      )}
+
+      {bulkDeleteOpen && (
+        <ConfirmDialog
+          title="Delete items"
+          message={`Move ${selectedCount} item(s) to the trash?`}
+          onCancel={() => {
+            setBulkDeleteOpen(false);
+            setBulkDeleteError(null);
+          }}
+          onConfirm={handleBulkDelete}
+          isSubmitting={bulkDeleteMutation.isPending}
+          error={bulkDeleteError}
         />
       )}
     </div>

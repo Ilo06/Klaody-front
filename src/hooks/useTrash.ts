@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import {
+  bulkRestore,
   emptyTrash,
   listTrash,
   restoreAll,
   restoreFile,
   restoreFolder,
+  type BulkItemsRequest,
   type ListTrashParams,
   type TrashListing,
 } from "../lib/api";
@@ -44,6 +46,14 @@ export function useRestoreAll() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => restoreAll(),
+    onSuccess: () => invalidateAfterRestore(queryClient),
+  });
+}
+
+export function useBulkRestore() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (items: BulkItemsRequest) => bulkRestore(items),
     onSuccess: () => invalidateAfterRestore(queryClient),
   });
 }

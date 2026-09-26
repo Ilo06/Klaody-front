@@ -19,10 +19,15 @@ interface BrowserTableProps {
   onMoveFile: (file: FileMetadata) => void;
   onDeleteFile: (file: FileMetadata) => void;
   onShareFile: (file: FileMetadata) => void;
+  /** When true, rows show a checkbox and tapping a row toggles selection instead of opening/previewing it. */
+  selectionMode?: boolean;
+  selectedFileIds?: Set<number>;
+  selectedFolderIds?: Set<number>;
+  onToggleFileSelected?: (file: FileMetadata) => void;
+  onToggleFolderSelected?: (folder: FolderMetadata) => void;
 }
 
 type ActiveSheet = { kind: "folder"; folder: FolderMetadata } | { kind: "file"; file: FileMetadata } | null;
-
 
 export default function BrowserTable({
   folders,
@@ -36,6 +41,11 @@ export default function BrowserTable({
   onMoveFile,
   onDeleteFile,
   onShareFile,
+  selectionMode = false,
+  selectedFileIds,
+  selectedFolderIds,
+  onToggleFileSelected,
+  onToggleFolderSelected,
 }: BrowserTableProps) {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
   const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
@@ -69,45 +79,69 @@ export default function BrowserTable({
   return (
     <>
       <ul>
-        {folders.map((folder) => (
-          <li
-            key={`folder-${folder.id}`}
-            className="flex items-center gap-1 border-b border-[var(--color-border)] last:border-0"
-          >
-            <button
-              type="button"
-              onClick={() => onOpenFolder(folder)}
-              className="flex min-w-0 flex-1 items-center gap-3 py-3.5 text-left"
+        {folders.map((folder) => {
+          const isSelected = selectedFolderIds?.has(folder.id) ?? false;
+          return (
+            <li
+              key={`folder-${folder.id}`}
+              className="flex items-center gap-1 border-b border-[var(--color-border)] last:border-0"
             >
-              <Folder className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px]">{folder.name}</span>
-                <span className="block truncate text-[12px] text-[var(--color-ink-muted)]">
-                  Created {format(new Date(folder.createdAt), "MMM d, yyyy")}
+              {selectionMode && (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onToggleFolderSelected?.(folder)}
+                  aria-label={`Select ${folder.name}`}
+                  className="ml-1 mr-3 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => (selectionMode ? onToggleFolderSelected?.(folder) : onOpenFolder(folder))}
+                className="flex min-w-0 flex-1 items-center gap-3 py-3.5 text-left"
+              >
+                <Folder className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px]">{folder.name}</span>
+                  <span className="block truncate text-[12px] text-[var(--color-ink-muted)]">
+                    Created {format(new Date(folder.createdAt), "MMM d, yyyy")}
+                  </span>
                 </span>
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveSheet({ kind: "folder", folder })}
-              aria-label={`More actions for ${folder.name}`}
-              className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
-            >
-              <MoreVertical className="h-5 w-5" />
-            </button>
-          </li>
-        ))}
+              </button>
+              {!selectionMode && (
+                <button
+                  type="button"
+                  onClick={() => setActiveSheet({ kind: "folder", folder })}
+                  aria-label={`More actions for ${folder.name}`}
+                  className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </button>
+              )}
+            </li>
+          );
+        })}
         {files.map((file) => {
           const Icon = fileIcon(file.mimeType);
+          const isSelected = selectedFileIds?.has(file.id) ?? false;
           return (
             <li
               key={`file-${file.id}`}
               className="flex items-center gap-1 border-b border-[var(--color-border)] last:border-0"
             >
+              {selectionMode && (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onToggleFileSelected?.(file)}
+                  aria-label={`Select ${file.name}`}
+                  className="ml-1 mr-3 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+                />
+              )}
               <button
                 type="button"
-                onClick={() => setPreviewFile(file)}
-                aria-label={`Preview ${file.name}`}
+                onClick={() => (selectionMode ? onToggleFileSelected?.(file) : setPreviewFile(file))}
+                aria-label={selectionMode ? `Select ${file.name}` : `Preview ${file.name}`}
                 className="flex min-w-0 flex-1 items-center gap-3 py-3.5 text-left"
               >
                 <Icon className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
@@ -118,14 +152,16 @@ export default function BrowserTable({
                   </span>
                 </span>
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveSheet({ kind: "file", file })}
-                aria-label={`More actions for ${file.name}`}
-                className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
-              >
-                <MoreVertical className="h-5 w-5" />
-              </button>
+              {!selectionMode && (
+                <button
+                  type="button"
+                  onClick={() => setActiveSheet({ kind: "file", file })}
+                  aria-label={`More actions for ${file.name}`}
+                  className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
+                >
+                  <MoreVertical className="h-5 w-5" />
+                </button>
+              )}
             </li>
           );
         })}

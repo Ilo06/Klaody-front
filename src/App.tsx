@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import FilesPage from "./pages/FilesPage";
+import TrashPage from "./pages/TrashPage";
 import { useAuth } from "./context/AuthContext";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -27,6 +28,14 @@ function App() {
         element={
           <RequireAuth>
             <FilesPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/trash"
+        element={
+          <RequireAuth>
+            <TrashPage />
           </RequireAuth>
         }
       />

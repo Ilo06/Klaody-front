@@ -59,7 +59,7 @@ export default function LoginPage() {
 
       <div className="w-full max-w-[400px]">
         <div className="mb-14 text-center">
-          <span className="font-[var(--font-serif)] text-[36px] font-bold tracking-tight text-[var(--color-ink)]">
+          <span className="font-[var(--font-serif)] text-[36px] font-bold tracking-tight text-[var(--color-ink)]" style={{ fontFamily: "var(--font-serif)" }}>
             klaody
           </span>
         </div>

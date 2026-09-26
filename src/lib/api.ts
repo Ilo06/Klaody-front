@@ -235,6 +235,69 @@ export async function deleteFolder(id: number): Promise<void> {
   await apiClient.delete(`/folders/${id}`);
 }
 
+// --- Trash --------------------------------------------------------------------
+
+export interface ListTrashParams {
+  type?: "file" | "folder";
+  name?: string;
+  deletedAfter?: string;
+  deletedBefore?: string;
+}
+
+/** Only top-level trashed items: children of a trashed folder ride along with it. */
+export interface TrashListing {
+  files: FileMetadata[];
+  folders: FolderMetadata[];
+}
+
+export interface BulkItemRef {
+  type: "file" | "folder";
+  id: number;
+}
+
+export interface BulkFailure extends BulkItemRef {
+  status: 404 | 409;
+  error: string;
+}
+
+/** Every item is attempted independently — check `failed` even on a 200. */
+export interface BulkResult {
+  succeeded: BulkItemRef[];
+  failed: BulkFailure[];
+}
+
+export interface EmptyTrashResult {
+  deletedFiles: number;
+  deletedFolders: number;
+}
+
+export async function listTrash(params: ListTrashParams = {}): Promise<TrashListing> {
+  const { data } = await apiClient.get<TrashListing>("/trash", { params });
+  return data;
+}
+
+export async function restoreFile(id: number): Promise<FileMetadata> {
+  const { data } = await apiClient.post<FileMetadata>(`/trash/files/${id}/restore`);
+  return data;
+}
+
+export async function restoreFolder(id: number): Promise<FolderMetadata> {
+  const { data } = await apiClient.post<FolderMetadata>(`/trash/folders/${id}/restore`);
+  return data;
+}
+
+/** Restores every top-level trashed item (each folder brings its contents back with it). */
+export async function restoreAll(): Promise<BulkResult> {
+  const { data } = await apiClient.post<BulkResult>("/trash/restore-all");
+  return data;
+}
+
+/** Permanently deletes everything in the trash, file contents included. Cannot be undone. */
+export async function emptyTrash(): Promise<EmptyTrashResult> {
+  const { data } = await apiClient.delete<EmptyTrashResult>("/trash");
+  return data;
+}
+
 // --- Helpers ------------------------------------------------------------------
 
 function parseFilenameFromDisposition(disposition?: string): string | null {

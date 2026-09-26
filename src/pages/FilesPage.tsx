@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  Trash2,
   UploadCloud,
 } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
@@ -319,7 +320,9 @@ export default function FilesPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
-        <span className="font-[var(--font-serif)] text-[20px] font-bold tracking-tight">klaody</span>
+        <span className="text-[23px] font-bold tracking-tight" style={{ fontFamily: "var(--font-serif)" }}>
+          klaody
+        </span>
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -332,7 +335,7 @@ export default function FilesPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 pb-28 pt-6 sm:px-8 sm:pb-8 sm:pt-8">
+      <main className="mx-auto max-w-5xl px-5 pb-28 pt-6 sm:px-8 sm:pb-24 sm:pt-8">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <Breadcrumbs path={breadcrumbPath} onNavigate={goToFolder} />
@@ -416,6 +419,17 @@ export default function FilesPage() {
       </main>
 
       <Fab onClick={() => setFabOpen(true)} label="Add" icon={<Plus className="h-6 w-6" />} />
+
+      {/* Persistent, bottom-anchored on every breakpoint — unlike Fab, which is mobile-only. */}
+      <button
+        type="button"
+        onClick={() => navigate("/trash")}
+        aria-label="Trash"
+        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-40 flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
+      >
+        <Trash2 className="h-[14px] w-[14px]" />
+        Trash
+      </button>
 
       {fabOpen && (
         <ActionSheet

@@ -136,7 +136,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--color-accent)] py-3.5 text-[15px] font-semibold text-[var(--color-accent-contrast)] transition-colors hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center cursor-pointer justify-center gap-2 rounded-md bg-[var(--color-accent)] py-3.5 text-[15px] font-semibold text-[var(--color-accent-contrast)] transition-colors hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting && <Loader2 className="h-[15px] w-[15px] animate-spin" />}
               {isSubmitting ? "Signing in…" : "Sign in"}

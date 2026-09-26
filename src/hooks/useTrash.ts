@@ -62,6 +62,10 @@ export function useEmptyTrash() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => emptyTrash(),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["trash"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trash"] });
+      // Permanent deletion actually frees disk space, unlike a soft delete.
+      queryClient.invalidateQueries({ queryKey: ["storage"] });
+    },
   });
 }

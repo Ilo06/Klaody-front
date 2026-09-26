@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   AlertCircle,
@@ -23,6 +24,7 @@ import Modal from "../components/Modal";
 import ActionSheet from "../components/ActionSheet";
 import ShareModal from "../components/ShareModal";
 import Fab from "../components/Fab";
+import StorageIndicator from "../components/StorageIndicator";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import {
@@ -130,6 +132,7 @@ export default function FilesPage() {
   const navigate = useNavigate();
   const { clearSession } = useAuth();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const uploadRef = useRef<UploadDropzoneHandle>(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -430,7 +433,14 @@ export default function FilesPage() {
         </div>
 
         <div className="mt-6">
-          <UploadDropzone ref={uploadRef} folderId={currentFolderId} onUploaded={() => filesQuery.refetch()} />
+          <UploadDropzone
+            ref={uploadRef}
+            folderId={currentFolderId}
+            onUploaded={() => {
+              filesQuery.refetch();
+              queryClient.invalidateQueries({ queryKey: ["storage"] });
+            }}
+          />
         </div>
 
         {selectionMode ? (
@@ -551,15 +561,18 @@ export default function FilesPage() {
           <Fab onClick={() => setFabOpen(true)} label="Add" icon={<Plus className="h-6 w-6" />} />
 
           {/* Persistent, bottom-anchored on every breakpoint — unlike Fab, which is mobile-only. */}
-          <button
-            type="button"
-            onClick={() => navigate("/trash")}
-            aria-label="Trash"
-            className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-40 flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
-          >
-            <Trash2 className="h-[14px] w-[14px]" />
-            Trash
-          </button>
+          <div className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-40 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/trash")}
+              aria-label="Trash"
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
+            >
+              <Trash2 className="h-[14px] w-[14px]" />
+              Trash
+            </button>
+            <StorageIndicator />
+          </div>
         </>
       )}
 

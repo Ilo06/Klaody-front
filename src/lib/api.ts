@@ -195,6 +195,20 @@ export async function deleteFile(id: number): Promise<void> {
   await apiClient.delete(`/files/${id}`);
 }
 
+export interface ShareResponse {
+  token: string;
+  expiresAt: string | null;
+}
+
+export function getShareUrl(token: string): string {
+  return `${API_BASE_URL}/share/${token}`;
+}
+
+export async function createShareLink(id: number, expiresIn?: number): Promise<ShareResponse> {
+  const { data } = await apiClient.post<ShareResponse>(`/files/${id}/share`, expiresIn ? { expiresIn } : {});
+  return data;
+}
+
 // --- Folders ------------------------------------------------------------------
 
 export async function listFolders(params: ListFoldersParams = {}): Promise<FolderMetadata[]> {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Download, Folder, FolderInput, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Download, Folder, FolderInput, Link2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
 import FilePreviewModal from "./FilePreviewModal";
 import type { FileMetadata, FolderMetadata } from "../lib/api";
@@ -18,6 +18,7 @@ interface BrowserTableProps {
   onRenameFile: (file: FileMetadata) => void;
   onMoveFile: (file: FileMetadata) => void;
   onDeleteFile: (file: FileMetadata) => void;
+  onShareFile: (file: FileMetadata) => void;
 }
 
 type ActiveSheet = { kind: "folder"; folder: FolderMetadata } | { kind: "file"; file: FileMetadata } | null;
@@ -34,6 +35,7 @@ export default function BrowserTable({
   onRenameFile,
   onMoveFile,
   onDeleteFile,
+  onShareFile,
 }: BrowserTableProps) {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
   const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
@@ -58,6 +60,7 @@ export default function BrowserTable({
 
   const fileActions = (file: FileMetadata): ActionSheetItem[] => [
     { label: "Download", icon: Download, onClick: () => onDownloadFile(file) },
+    { label: "Share", icon: Link2, onClick: () => onShareFile(file) },
     { label: "Rename", icon: Pencil, onClick: () => onRenameFile(file) },
     { label: "Move", icon: FolderInput, onClick: () => onMoveFile(file) },
     { label: "Delete", icon: Trash2, danger: true, onClick: () => onDeleteFile(file) },

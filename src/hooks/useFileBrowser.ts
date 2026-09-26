@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createFolder,
+  createShareLink,
   deleteFile,
   deleteFolder,
   listFiles,
@@ -18,6 +19,11 @@ export function useFiles(folderId: number | null, filters: Omit<ListFilesParams,
   return useQuery<FileMetadata[]>({
     queryKey: ["files", folderId, filters],
     queryFn: () => listFiles({ folderId: folderId ?? "root", ...filters }),
+  });
+}
+export function useCreateShareLink() {
+  return useMutation({
+    mutationFn: ({ id, expiresIn }: { id: number; expiresIn?: number }) => createShareLink(id, expiresIn),
   });
 }
 

@@ -19,13 +19,22 @@ import MoveModal from "../components/MoveModal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Modal from "../components/Modal";
 import ActionSheet from "../components/ActionSheet";
+import ShareModal from "../components/ShareModal";
 import Fab from "../components/Fab";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
-import { ApiError, downloadFile, type FileMetadata, type FolderMetadata } from "../lib/api";
+import {
+  ApiError,
+  downloadFile,
+  getShareUrl,
+  type FileMetadata,
+  type FolderMetadata,
+  type ShareResponse,
+} from "../lib/api";
 import {
   useAllFolders,
   useCreateFolder,
+  useCreateShareLink,
   useDeleteFile,
   useDeleteFolder,
   useFiles,
@@ -44,6 +53,7 @@ type ModalState =
   | { type: "move-folder"; folder: FolderMetadata }
   | { type: "delete-file"; file: FileMetadata }
   | { type: "delete-folder"; folder: FolderMetadata }
+  | { type: "share-file"; file: FileMetadata }
   | null;
 
 const MIME_FILTERS = [
@@ -130,6 +140,7 @@ export default function FilesPage() {
 
   const [modal, setModal] = useState<ModalState>(null);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [shareResult, setShareResult] = useState<ShareResponse | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
 
@@ -165,6 +176,7 @@ export default function FilesPage() {
   const moveFolderMutation = useMoveFolder();
   const deleteFileMutation = useDeleteFile();
   const deleteFolderMutation = useDeleteFolder();
+  const createShareLinkMutation = useCreateShareLink();
 
   const goToFolder = (folderId: number | null) => {
     navigate(folderId === null ? "/files" : `/files/${folderId}`);
@@ -186,6 +198,7 @@ export default function FilesPage() {
   const closeModal = () => {
     setModal(null);
     setModalError(null);
+    setShareResult(null);
   };
 
   const handleCreateFolder = (name: string) => {
@@ -278,6 +291,18 @@ export default function FilesPage() {
         onError: (err) => setModalError(errorMessage(err, "Could not delete the folder")),
       });
     }
+  };
+
+  const handleCreateShare = (expiresIn: number | undefined) => {
+    if (modal?.type !== "share-file") return;
+    setModalError(null);
+    createShareLinkMutation.mutate(
+      { id: modal.file.id, expiresIn },
+      {
+        onSuccess: (data) => setShareResult(data),
+        onError: (err) => setModalError(errorMessage(err, "Could not create the share link")),
+      },
+    );
   };
 
   const handleDownload = async (file: FileMetadata) => {
@@ -384,6 +409,7 @@ export default function FilesPage() {
               onRenameFile={(file) => setModal({ type: "rename-file", file })}
               onMoveFile={(file) => setModal({ type: "move-file", file })}
               onDeleteFile={(file) => setModal({ type: "delete-file", file })}
+              onShareFile={(file) => setModal({ type: "share-file", file })}
             />
           )}
         </div>
@@ -501,6 +527,17 @@ export default function FilesPage() {
           onConfirm={handleDelete}
           isSubmitting={deleteFolderMutation.isPending}
           error={modalError}
+        />
+      )}
+
+      {modal?.type === "share-file" && (
+        <ShareModal
+          file={modal.file}
+          shareUrl={shareResult ? getShareUrl(shareResult.token) : null}
+          isSubmitting={createShareLinkMutation.isPending}
+          error={modalError}
+          onCancel={closeModal}
+          onCreate={handleCreateShare}
         />
       )}
     </div>

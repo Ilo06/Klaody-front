@@ -324,7 +324,7 @@ export default function FilesPage() {
           <button
             type="button"
             onClick={() => clearSession()}
-            className="text-[13px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+            className="text-[13px] text-[var(--color-ink-muted)] inline-flex px-4 py-1.5 cursor-pointer items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] hover:text-[var(--color-ink)]"
           >
             Sign out
           </button>

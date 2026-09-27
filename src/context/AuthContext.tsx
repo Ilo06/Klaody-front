@@ -7,7 +7,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { AUTH_EXPIRED_EVENT } from "../lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { AUTH_EXPIRED_EVENT, getMe } from "../lib/api";
 
 const TOKEN_KEY = "klaody.token";
 const EXPIRES_AT_KEY = "klaody.tokenExpiresAt";
@@ -15,6 +16,8 @@ const EXPIRES_AT_KEY = "klaody.tokenExpiresAt";
 interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
+  /** Whether the current user is an admin. False while loading or logged out. */
+  isAdmin: boolean;
   /** Persist a freshly issued token and schedule its expiry. */
   setSession: (token: string, expiresIn: number) => void;
   /** Clear the session, e.g. on logout or a 401 from the API. */
@@ -60,9 +63,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(AUTH_EXPIRED_EVENT, clearSession);
   }, [clearSession]);
 
+  // Only the JWT's subject is available client-side, so admin status is
+  // fetched separately and cached — refetched whenever the session changes.
+  const { data: currentUser } = useQuery({
+    queryKey: ["me"],
+    queryFn: getMe,
+    enabled: token !== null,
+    staleTime: 5 * 60_000,
+  });
+
   const value = useMemo<AuthContextValue>(
-    () => ({ token, isAuthenticated: token !== null, setSession, clearSession }),
-    [token, setSession, clearSession],
+    () => ({
+      token,
+      isAuthenticated: token !== null,
+      isAdmin: currentUser?.isAdmin ?? false,
+      setSession,
+      clearSession,
+    }),
+    [token, currentUser, setSession, clearSession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

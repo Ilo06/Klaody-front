@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   Trash2,
   UploadCloud,
+  UserPlus,
 } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
 import Breadcrumbs from "../components/Breadcrumbs";
@@ -23,6 +24,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import Modal from "../components/Modal";
 import ActionSheet from "../components/ActionSheet";
 import ShareModal from "../components/ShareModal";
+import RegisterUserModal, { type RegisterUserValues } from "../components/RegisterUserModal";
 import Fab from "../components/Fab";
 import StorageIndicator from "../components/StorageIndicator";
 import { useAuth } from "../context/AuthContext";
@@ -49,6 +51,7 @@ import {
   useRenameFile,
   useRenameFolder,
 } from "../hooks/useFileBrowser";
+import { useRegisterUser } from "../hooks/useUsers";
 
 type ModalState =
   | { type: "new-folder" }
@@ -59,6 +62,7 @@ type ModalState =
   | { type: "delete-file"; file: FileMetadata }
   | { type: "delete-folder"; folder: FolderMetadata }
   | { type: "share-file"; file: FileMetadata }
+  | { type: "register-user" }
   | null;
 
 const MIME_FILTERS = [
@@ -130,7 +134,7 @@ export default function FilesPage() {
   const currentFolderId = Number.isNaN(parsedFolderId) ? null : parsedFolderId;
 
   const navigate = useNavigate();
-  const { clearSession } = useAuth();
+  const { clearSession, isAdmin } = useAuth();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const uploadRef = useRef<UploadDropzoneHandle>(null);
@@ -190,6 +194,7 @@ export default function FilesPage() {
   const deleteFolderMutation = useDeleteFolder();
   const bulkDeleteMutation = useBulkDelete();
   const createShareLinkMutation = useCreateShareLink();
+  const registerUserMutation = useRegisterUser();
 
   // The selection only makes sense for what's currently on screen.
   useEffect(() => {
@@ -388,6 +393,17 @@ export default function FilesPage() {
     );
   };
 
+  const handleRegisterUser = (values: RegisterUserValues) => {
+    setModalError(null);
+    registerUserMutation.mutate(values, {
+      onSuccess: () => {
+        showToast(`Account created for ${values.email}`);
+        closeModal();
+      },
+      onError: (err) => setModalError(errorMessage(err, "Could not create the account")),
+    });
+  };
+
   const handleDownload = async (file: FileMetadata) => {
     try {
       await downloadFile(file.id, file.name);
@@ -572,6 +588,17 @@ export default function FilesPage() {
               Trash
             </button>
             <StorageIndicator />
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setModal({ type: "register-user" })}
+                aria-label="New user"
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
+              >
+                <UserPlus className="h-[14px] w-[14px]" />
+                New user
+              </button>
+            )}
           </div>
         </>
       )}
@@ -708,6 +735,15 @@ export default function FilesPage() {
           error={modalError}
           onCancel={closeModal}
           onCreate={handleCreateShare}
+        />
+      )}
+
+      {modal?.type === "register-user" && (
+        <RegisterUserModal
+          onCancel={closeModal}
+          onSubmit={handleRegisterUser}
+          isSubmitting={registerUserMutation.isPending}
+          error={modalError}
         />
       )}
 

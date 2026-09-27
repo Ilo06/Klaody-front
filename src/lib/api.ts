@@ -83,6 +83,12 @@ export class ApiError extends Error {
   }
 }
 
+export interface CurrentUser {
+  id: number;
+  email: string;
+  isAdmin: boolean;
+}
+
 export async function login(email: string, password: string): Promise<LoginResponse> {
   let response: Response;
 
@@ -145,6 +151,22 @@ apiClient.interceptors.response.use(
 
 export function isCancelledUpload(error: unknown): boolean {
   return axios.isCancel(error);
+}
+
+// --- Auth -------------------------------------------------------------------
+
+export async function getMe(): Promise<CurrentUser> {
+  const { data } = await apiClient.get<CurrentUser>("/auth/me");
+  return data;
+}
+
+export async function registerUser(
+  email: string,
+  password: string,
+  isAdmin: boolean,
+): Promise<LoginResponse> {
+  const { data } = await apiClient.post<LoginResponse>("/auth/register", { email, password, isAdmin });
+  return data;
 }
 
 // --- Files ------------------------------------------------------------------

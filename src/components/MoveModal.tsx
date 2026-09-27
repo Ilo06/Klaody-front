@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, ArrowLeft, Folder, Loader2 } from "lucide-react";
 import Modal from "./Modal";
+import { Skeleton } from "./Skeleton";
 import { useAllFolders, useFolders } from "../hooks/useFileBrowser";
 
 interface MoveModalProps {
@@ -55,23 +57,39 @@ export default function MoveModal({
       </div>
 
       <div className="max-h-[45vh] overflow-y-auto rounded-md border border-[var(--color-border)] sm:max-h-64">
-        {subfoldersQuery.isLoading && (
-          <div className="p-4 text-[13px] text-[var(--color-ink-muted)]">Loading…</div>
-        )}
-        {!subfoldersQuery.isLoading && visibleSubfolders.length === 0 && (
-          <div className="p-4 text-[13px] text-[var(--color-ink-muted)]">No subfolders here.</div>
-        )}
-        {visibleSubfolders.map((folder) => (
-          <button
-            key={folder.id}
-            type="button"
-            onClick={() => setBrowsingId(folder.id)}
-            className="flex w-full items-center gap-2.5 border-b border-[var(--color-border)] px-3.5 py-3.5 text-left text-[15px] last:border-0 hover:bg-[var(--color-border)]/30 sm:py-2.5 sm:text-[14px]"
-          >
-            <Folder className="h-4 w-4 shrink-0 text-[var(--color-ink-muted)]" />
-            <span className="truncate">{folder.name}</span>
-          </button>
-        ))}
+        <AnimatePresence mode="wait" initial={false}>
+          {subfoldersQuery.isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+              className="space-y-3 p-3.5"
+            >
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-3/5" />
+            </motion.div>
+          ) : (
+            <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.12 }}>
+              {visibleSubfolders.length === 0 && (
+                <div className="p-4 text-[13px] text-[var(--color-ink-muted)]">No subfolders here.</div>
+              )}
+              {visibleSubfolders.map((folder) => (
+                <button
+                  key={folder.id}
+                  type="button"
+                  onClick={() => setBrowsingId(folder.id)}
+                  className="flex w-full items-center gap-2.5 border-b border-[var(--color-border)] px-3.5 py-3.5 text-left text-[15px] last:border-0 hover:bg-[var(--color-border)]/30 sm:py-2.5 sm:text-[14px]"
+                >
+                  <Folder className="h-4 w-4 shrink-0 text-[var(--color-ink-muted)]" />
+                  <span className="truncate">{folder.name}</span>
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {error && (

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
   ArrowUpDown,
   CheckSquare,
   FolderPlus,
-  Loader2,
   Plus,
   Search,
   SlidersHorizontal,
@@ -15,6 +15,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
+import { SkeletonList } from "../components/Skeleton";
 import Breadcrumbs from "../components/Breadcrumbs";
 import BrowserTable from "../components/BrowserTable";
 import UploadDropzone, { type UploadDropzoneHandle } from "../components/UploadDropzone";
@@ -459,116 +460,154 @@ export default function FilesPage() {
           />
         </div>
 
-        {selectionMode ? (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleSelectAllVisible}
-                className="text-[13px] font-medium text-[var(--color-accent)] hover:underline"
-              >
-                {allVisibleSelected ? "Clear" : "Select all"}
-              </button>
-              <span className="text-[13px] text-[var(--color-ink-muted)]">{selectedCount} selected</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={exitSelectionMode}
-                className="rounded-md px-3 py-1.5 text-[13px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => setBulkDeleteOpen(true)}
-                disabled={selectedCount === 0}
-                className="flex items-center gap-1.5 rounded-md border border-[var(--color-danger-border)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Trash2 className="h-[14px] w-[14px]" />
-                Delete
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="relative min-w-[160px] flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(event) => handleSearchChange(event.target.value)}
-                placeholder="Search by name"
-                className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setFiltersOpen(true)}
-              aria-label="Filters"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] sm:hidden"
+        <AnimatePresence mode="wait" initial={false}>
+          {selectionMode ? (
+            <motion.div
+              key="selection-bar"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5"
             >
-              <SlidersHorizontal className="h-[16px] w-[16px]" />
-            </button>
-
-            <div className="hidden sm:flex">
-              <FilterControls
-                mimeTypeFilter={mimeTypeFilter}
-                sortBy={sortBy}
-                order={order}
-                onMimeTypeChange={(value) => updateFilter("mimeType", value)}
-                onSortByChange={(value) => updateFilter("sortBy", value)}
-                onToggleOrder={() => updateFilter("order", order === "asc" ? "desc" : "asc")}
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setSelectionMode(true)}
-              disabled={visibleFolders.length + visibleFiles.length === 0}
-              aria-label="Select items"
-              title="Select"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleSelectAllVisible}
+                  className="text-[13px] font-medium text-[var(--color-accent)] hover:underline"
+                >
+                  {allVisibleSelected ? "Clear" : "Select all"}
+                </button>
+                <span className="text-[13px] text-[var(--color-ink-muted)]">{selectedCount} selected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={exitSelectionMode}
+                  className="rounded-md px-3 py-1.5 text-[13px] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkDeleteOpen(true)}
+                  disabled={selectedCount === 0}
+                  className="flex items-center gap-1.5 rounded-md border border-[var(--color-danger-border)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Trash2 className="h-[14px] w-[14px]" />
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="filter-bar"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="mt-6 flex flex-wrap items-center gap-3"
             >
-              <CheckSquare className="h-[14px] w-[14px]" />
-            </button>
-          </div>
-        )}
+              <div className="relative min-w-[160px] flex-1">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(event) => handleSearchChange(event.target.value)}
+                  placeholder="Search by name"
+                  className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(true)}
+                aria-label="Filters"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] sm:hidden"
+              >
+                <SlidersHorizontal className="h-[16px] w-[16px]" />
+              </button>
+
+              <div className="hidden sm:flex">
+                <FilterControls
+                  mimeTypeFilter={mimeTypeFilter}
+                  sortBy={sortBy}
+                  order={order}
+                  onMimeTypeChange={(value) => updateFilter("mimeType", value)}
+                  onSortByChange={(value) => updateFilter("sortBy", value)}
+                  onToggleOrder={() => updateFilter("order", order === "asc" ? "desc" : "asc")}
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectionMode(true)}
+                disabled={visibleFolders.length + visibleFiles.length === 0}
+                aria-label="Select items"
+                title="Select"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <CheckSquare className="h-[14px] w-[14px]" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:px-5">
-          {isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-20 text-[14px] text-[var(--color-ink-muted)]">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading…
-            </div>
-          ) : loadError ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-20 text-center">
-              <AlertCircle className="h-6 w-6 text-[var(--color-danger)]" />
-              <p className="text-[14px] text-[var(--color-danger)]">
-                {errorMessage(loadError, "Could not load this folder")}
-              </p>
-            </div>
-          ) : (
-            <BrowserTable
-              folders={visibleFolders}
-              files={visibleFiles}
-              onOpenFolder={(folder) => goToFolder(folder.id)}
-              onRenameFolder={(folder) => setModal({ type: "rename-folder", folder })}
-              onMoveFolder={(folder) => setModal({ type: "move-folder", folder })}
-              onDeleteFolder={(folder) => setModal({ type: "delete-folder", folder })}
-              onDownloadFile={handleDownload}
-              onRenameFile={(file) => setModal({ type: "rename-file", file })}
-              onMoveFile={(file) => setModal({ type: "move-file", file })}
-              onDeleteFile={(file) => setModal({ type: "delete-file", file })}
-              onShareFile={(file) => setModal({ type: "share-file", file })}
-              selectionMode={selectionMode}
-              selectedFileIds={selectedFileIds}
-              selectedFolderIds={selectedFolderIds}
-              onToggleFileSelected={toggleFileSelected}
-              onToggleFolderSelected={toggleFolderSelected}
-            />
-          )}
+          <AnimatePresence mode="wait" initial={false}>
+            {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <SkeletonList />
+              </motion.div>
+            ) : loadError ? (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-col items-center justify-center gap-2 py-20 text-center"
+              >
+                <AlertCircle className="h-6 w-6 text-[var(--color-danger)]" />
+                <p className="text-[14px] text-[var(--color-danger)]">
+                  {errorMessage(loadError, "Could not load this folder")}
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={`content-${currentFolderId ?? "root"}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <BrowserTable
+                  folders={visibleFolders}
+                  files={visibleFiles}
+                  onOpenFolder={(folder) => goToFolder(folder.id)}
+                  onRenameFolder={(folder) => setModal({ type: "rename-folder", folder })}
+                  onMoveFolder={(folder) => setModal({ type: "move-folder", folder })}
+                  onDeleteFolder={(folder) => setModal({ type: "delete-folder", folder })}
+                  onDownloadFile={handleDownload}
+                  onRenameFile={(file) => setModal({ type: "rename-file", file })}
+                  onMoveFile={(file) => setModal({ type: "move-file", file })}
+                  onDeleteFile={(file) => setModal({ type: "delete-file", file })}
+                  onShareFile={(file) => setModal({ type: "share-file", file })}
+                  selectionMode={selectionMode}
+                  selectedFileIds={selectedFileIds}
+                  selectedFolderIds={selectedFolderIds}
+                  onToggleFileSelected={toggleFileSelected}
+                  onToggleFolderSelected={toggleFolderSelected}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
 

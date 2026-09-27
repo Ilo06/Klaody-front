@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { motion } from "framer-motion";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -14,11 +15,17 @@ interface ModalProps {
  */
 export default function Modal({ title, onClose, children }: ModalProps) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.15 }}
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:px-4"
       onClick={onClose}
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         className="max-h-[85vh] w-full overflow-y-auto rounded-t-2xl border-t border-[var(--color-border)] bg-[var(--color-surface)] p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-xl sm:max-w-md sm:rounded-xl sm:border"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
@@ -38,7 +45,7 @@ export default function Modal({ title, onClose, children }: ModalProps) {
           </button>
         </div>
         {children}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

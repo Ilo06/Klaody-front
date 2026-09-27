@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, Download, Loader2, MoreVertical, X } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
 import { ApiError, fetchFileBlob, type FileMetadata } from "../lib/api";
@@ -70,7 +71,12 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
   const Icon = fileIcon(file.mimeType);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[var(--color-surface)] sm:items-center sm:justify-center sm:bg-black/50 sm:p-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-50 flex flex-col bg-[var(--color-surface)] sm:items-center sm:justify-center sm:bg-black/50 sm:p-6"
+    >
       {/*
         `sm:h-[85vh]` (a definite height) instead of `sm:h-auto` + `max-h`.
         With only `h-auto`, this container had no resolvable height, so the
@@ -79,7 +85,12 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
         desktop. Giving the card a real height fixes that for every preview
         type, PDFs included, and `max-h` still protects short viewports.
       */}
-      <div className="flex h-full w-full flex-col overflow-hidden sm:h-[85vh] sm:max-h-[85vh] sm:w-[90vw] sm:max-w-4xl sm:rounded-xl sm:border sm:border-[var(--color-border)] sm:bg-[var(--color-surface)] sm:shadow-2xl">
+      <motion.div
+        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="flex h-full w-full flex-col overflow-hidden sm:h-[85vh] sm:max-h-[85vh] sm:w-[90vw] sm:max-w-4xl sm:rounded-xl sm:border sm:border-[var(--color-border)] sm:bg-[var(--color-surface)] sm:shadow-2xl"
+      >
         <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--color-ink-muted)]" />
@@ -119,30 +130,55 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
         </header>
 
         <div className="flex flex-1 items-center justify-center overflow-auto bg-[var(--color-bg)] p-4">
-          {state.status === "loading" && (
-            <Loader2 className="h-6 w-6 animate-spin text-[var(--color-ink-muted)]" />
-          )}
+          <AnimatePresence mode="wait" initial={false}>
+            {state.status === "loading" && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
+              >
+                <Loader2 className="h-6 w-6 animate-spin text-[var(--color-ink-muted)]" />
+              </motion.div>
+            )}
 
-          {state.status === "error" && (
-            <div className="flex flex-col items-center gap-2 text-center">
-              <AlertCircle className="h-6 w-6 text-[var(--color-danger)]" />
-              <p className="text-[14px] text-[var(--color-danger)]">{state.message}</p>
-            </div>
-          )}
+            {state.status === "error" && (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
+                className="flex flex-col items-center gap-2 text-center"
+              >
+                <AlertCircle className="h-6 w-6 text-[var(--color-danger)]" />
+                <p className="text-[14px] text-[var(--color-danger)]">{state.message}</p>
+              </motion.div>
+            )}
 
-          {state.status === "ready" && (
-            <PreviewContent
-              file={file}
-              url={state.url}
-              text={state.text}
-              tooLargeForText={state.tooLargeForText}
-            />
-          )}
+            {state.status === "ready" && (
+              <motion.div
+                key="ready"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.15 }}
+                className="flex h-full w-full items-center justify-center"
+              >
+                <PreviewContent
+                  file={file}
+                  url={state.url}
+                  text={state.text}
+                  tooLargeForText={state.tooLargeForText}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
 
       {sheetOpen && <ActionSheet title={file.name} actions={actions} onClose={() => setSheetOpen(false)} />}
-    </div>
+    </motion.div>
   );
 }
 

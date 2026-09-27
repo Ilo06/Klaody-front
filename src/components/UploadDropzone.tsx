@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { useDropzone } from "react-dropzone";
+import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, File as FileIcon, UploadCloud, X } from "lucide-react";
 import { ApiError, isCancelledUpload, uploadFile } from "../lib/api";
 import { formatBytes } from "../lib/format";
@@ -113,11 +114,17 @@ const UploadDropzone = forwardRef<UploadDropzoneHandle, UploadDropzoneProps>(fun
 
       {uploads.length > 0 && (
         <ul className="mt-3 space-y-2">
-          {uploads.map((upload) => (
-            <li
-              key={upload.id}
-              className="flex items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2.5 text-[13px]"
-            >
+          <AnimatePresence initial={false}>
+            {uploads.map((upload) => (
+              <motion.li
+                key={upload.id}
+                layout
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: 8, transition: { duration: 0.12 } }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="flex items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2.5 text-[13px]"
+              >
               <FileIcon className="h-4 w-4 shrink-0 text-[var(--color-ink-muted)]" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
@@ -149,8 +156,9 @@ const UploadDropzone = forwardRef<UploadDropzoneHandle, UploadDropzoneProps>(fun
                   <X className="h-4 w-4" />
                 </button>
               )}
-            </li>
-          ))}
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
     </div>

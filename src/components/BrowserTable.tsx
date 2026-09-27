@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
+import { motion } from "framer-motion";
 import { Download, Folder, FolderInput, Link2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
 import FilePreviewModal from "./FilePreviewModal";
@@ -52,15 +53,23 @@ export default function BrowserTable({
 
   if (folders.length === 0 && files.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center px-4 py-24 text-center">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className="flex flex-col items-center justify-center px-4 py-24 text-center"
+      >
         <Folder className="h-8 w-8 text-[var(--color-ink-muted)]" />
         <h2 className="mt-4 text-[18px]">This folder is empty</h2>
         <p className="mt-1.5 text-[14px] text-[var(--color-ink-muted)]">
           Upload files or create a folder to get started.
         </p>
-      </div>
+      </motion.div>
     );
   }
+
+  // Small, capped stagger so long lists don't take forever to finish animating in.
+  const rowDelay = (index: number) => Math.min(index, 10) * 0.025;
 
   const folderActions = (folder: FolderMetadata): ActionSheetItem[] => [
     { label: "Rename", icon: Pencil, onClick: () => onRenameFolder(folder) },
@@ -79,11 +88,14 @@ export default function BrowserTable({
   return (
     <>
       <ul>
-        {folders.map((folder) => {
+        {folders.map((folder, index) => {
           const isSelected = selectedFolderIds?.has(folder.id) ?? false;
           return (
-            <li
+            <motion.li
               key={`folder-${folder.id}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, delay: rowDelay(index), ease: "easeOut" }}
               className="flex items-center gap-1 border-b border-[var(--color-border)] last:border-0"
             >
               {selectionMode && (
@@ -118,15 +130,18 @@ export default function BrowserTable({
                   <MoreVertical className="h-5 w-5" />
                 </button>
               )}
-            </li>
+            </motion.li>
           );
         })}
-        {files.map((file) => {
+        {files.map((file, index) => {
           const Icon = fileIcon(file.mimeType);
           const isSelected = selectedFileIds?.has(file.id) ?? false;
           return (
-            <li
+            <motion.li
               key={`file-${file.id}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, delay: rowDelay(folders.length + index), ease: "easeOut" }}
               className="flex items-center gap-1 border-b border-[var(--color-border)] last:border-0"
             >
               {selectionMode && (
@@ -162,7 +177,7 @@ export default function BrowserTable({
                   <MoreVertical className="h-5 w-5" />
                 </button>
               )}
-            </li>
+            </motion.li>
           );
         })}
       </ul>

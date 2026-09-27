@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { motion } from "framer-motion";
 
 interface FabProps {
   onClick: () => void;
@@ -9,13 +10,15 @@ interface FabProps {
 /** Floating action button, mobile only — desktop gets inline toolbar buttons instead. */
 export default function Fab({ onClick, label, icon }: FabProps) {
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-contrast)] shadow-lg transition-transform hover:bg-[var(--color-accent-hover)] active:scale-95 sm:hidden"
+      whileTap={{ scale: 0.92 }}
+      transition={{ duration: 0.12 }}
+      className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-contrast)] shadow-lg hover:bg-[var(--color-accent-hover)] sm:hidden"
     >
       {icon}
-    </button>
+    </motion.button>
   );
 }

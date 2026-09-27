@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 
 export interface ActionSheetItem {
@@ -19,11 +20,17 @@ interface ActionSheetProps {
  */
 export default function ActionSheet({ title, actions, onClose }: ActionSheetProps) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.15 }}
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:px-4 sm:pb-6"
       onClick={onClose}
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         className="w-full overflow-hidden rounded-t-2xl border-t border-[var(--color-border)] bg-[var(--color-surface)] pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-xl sm:max-w-sm sm:rounded-xl sm:border"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
@@ -62,7 +69,7 @@ export default function ActionSheet({ title, actions, onClose }: ActionSheetProp
             Cancel
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

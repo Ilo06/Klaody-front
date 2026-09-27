@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AUTH_EXPIRED_EVENT, getMe } from "../lib/api";
 
 const TOKEN_KEY = "klaody.token";
@@ -16,11 +16,8 @@ const EXPIRES_AT_KEY = "klaody.tokenExpiresAt";
 interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
-  /** Whether the current user is an admin. False while loading or logged out. */
   isAdmin: boolean;
-  /** Persist a freshly issued token and schedule its expiry. */
   setSession: (token: string, expiresIn: number) => void;
-  /** Clear the session, e.g. on logout or a 401 from the API. */
   clearSession: () => void;
 }
 
@@ -42,6 +39,7 @@ function readStoredToken(): string | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => readStoredToken());
+  const queryClient = useQueryClient();
 
   const setSession = useCallback((newToken: string, expiresIn: number) => {
     const expiresAt = Date.now() + expiresIn * 1000;
@@ -54,19 +52,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EXPIRES_AT_KEY);
     setToken(null);
-  }, []);
+    queryClient.removeQueries({ queryKey: ["me"] });
+  }, [queryClient]);
 
-  // The API client dispatches this on any 401, e.g. once the token expires
-  // mid-session — treat it the same as an explicit logout.
   useEffect(() => {
     window.addEventListener(AUTH_EXPIRED_EVENT, clearSession);
     return () => window.removeEventListener(AUTH_EXPIRED_EVENT, clearSession);
   }, [clearSession]);
 
-  // Only the JWT's subject is available client-side, so admin status is
-  // fetched separately and cached — refetched whenever the session changes.
   const { data: currentUser } = useQuery({
-    queryKey: ["me"],
+    queryKey: ["me", token],
     queryFn: getMe,
     enabled: token !== null,
     staleTime: 5 * 60_000,

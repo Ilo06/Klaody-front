@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Download, Folder, FolderInput, Link2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
 import FilePreviewModal from "./FilePreviewModal";
@@ -96,7 +96,7 @@ export default function BrowserTable({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18, delay: rowDelay(index), ease: "easeOut" }}
-              className="flex items-center gap-1 border-b border-[var(--color-border)] last:border-0"
+              className="flex items-center gap-1 border-b border-[var(--color-border)] transition-colors last:border-0 hover:bg-[var(--color-border)]/30"
             >
               {selectionMode && (
                 <input
@@ -142,7 +142,7 @@ export default function BrowserTable({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18, delay: rowDelay(folders.length + index), ease: "easeOut" }}
-              className="flex items-center gap-1 border-b border-[var(--color-border)] last:border-0"
+              className="flex items-center gap-1 border-b border-[var(--color-border)] transition-colors last:border-0 hover:bg-[var(--color-border)]/30"
             >
               {selectionMode && (
                 <input
@@ -182,29 +182,36 @@ export default function BrowserTable({
         })}
       </ul>
 
-      {activeSheet?.kind === "folder" && (
-        <ActionSheet
-          title={activeSheet.folder.name}
-          actions={folderActions(activeSheet.folder)}
-          onClose={() => setActiveSheet(null)}
-        />
-      )}
-      {activeSheet?.kind === "file" && (
-        <ActionSheet
-          title={activeSheet.file.name}
-          actions={fileActions(activeSheet.file)}
-          onClose={() => setActiveSheet(null)}
-        />
-      )}
+      <AnimatePresence>
+        {activeSheet?.kind === "folder" && (
+          <ActionSheet
+            key="folder-sheet"
+            title={activeSheet.folder.name}
+            actions={folderActions(activeSheet.folder)}
+            onClose={() => setActiveSheet(null)}
+          />
+        )}
+        {activeSheet?.kind === "file" && (
+          <ActionSheet
+            key="file-sheet"
+            title={activeSheet.file.name}
+            actions={fileActions(activeSheet.file)}
+            onClose={() => setActiveSheet(null)}
+          />
+        )}
+      </AnimatePresence>
 
-      {previewFile && (
-        <FilePreviewModal
-          file={previewFile}
-          onClose={() => setPreviewFile(null)}
-          onDownload={() => onDownloadFile(previewFile)}
-          actions={fileActions(previewFile).filter((action) => action.label !== "Download")}
-        />
-      )}
+      <AnimatePresence>
+        {previewFile && (
+          <FilePreviewModal
+            key="preview"
+            file={previewFile}
+            onClose={() => setPreviewFile(null)}
+            onDownload={() => onDownloadFile(previewFile)}
+            actions={fileActions(previewFile).filter((action) => action.label !== "Download")}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

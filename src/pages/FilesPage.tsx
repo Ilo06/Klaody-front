@@ -616,15 +616,15 @@ export default function FilesPage() {
           <Fab onClick={() => setFabOpen(true)} label="Add" icon={<Plus className="h-6 w-6" />} />
 
           {/* Persistent, bottom-anchored on every breakpoint — unlike Fab, which is mobile-only. */}
-          <div className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-40 flex items-center gap-2">
+          <div className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 right-24 z-40 flex items-center gap-2 sm:right-auto">
             <button
               type="button"
               onClick={() => navigate("/trash")}
               aria-label="Trash"
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-[13px] sm:px-4 font-medium text-[var(--color-ink-muted)] shadow-lg hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
             >
               <Trash2 className="h-[14px] w-[14px]" />
-              Trash
+              <span className="hidden sm:inline">Trash</span>
             </button>
             <StorageIndicator />
             {isAdmin && (
@@ -632,173 +632,181 @@ export default function FilesPage() {
                 type="button"
                 onClick={() => setModal({ type: "register-user" })}
                 aria-label="New user"
-                className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-[13px] sm:px-4 font-medium text-[var(--color-ink-muted)] shadow-lg hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
               >
                 <UserPlus className="h-[14px] w-[14px]" />
-                New user
+                <span className="hidden sm:inline">New user</span>
               </button>
             )}
           </div>
         </>
       )}
 
-      {/* Persistent, bottom-anchored on every breakpoint — unlike Fab, which is mobile-only. */}
-      <button
-        type="button"
-        onClick={() => navigate("/trash")}
-        aria-label="Trash"
-        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-40 flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 text-[13px] font-medium text-[var(--color-ink-muted)] shadow-lg transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
-      >
-        <Trash2 className="h-[14px] w-[14px]" />
-        Trash
-      </button>
-
-      {fabOpen && (
-        <ActionSheet
-          title="Add"
-          onClose={() => setFabOpen(false)}
-          actions={[
-            { label: "Upload files", icon: UploadCloud, onClick: () => uploadRef.current?.open() },
-            { label: "New folder", icon: FolderPlus, onClick: () => setModal({ type: "new-folder" }) },
-          ]}
-        />
-      )}
-
-      {filtersOpen && (
-        <Modal title="Filters" onClose={() => setFiltersOpen(false)}>
-          <FilterControls
-            mimeTypeFilter={mimeTypeFilter}
-            sortBy={sortBy}
-            order={order}
-            onMimeTypeChange={(value) => updateFilter("mimeType", value)}
-            onSortByChange={(value) => updateFilter("sortBy", value)}
-            onToggleOrder={() => updateFilter("order", order === "asc" ? "desc" : "asc")}
-            stacked
+      <AnimatePresence>
+        {fabOpen && (
+          <ActionSheet
+            key="fab-sheet"
+            title="Add"
+            onClose={() => setFabOpen(false)}
+            actions={[
+              { label: "Upload files", icon: UploadCloud, onClick: () => uploadRef.current?.open() },
+              { label: "New folder", icon: FolderPlus, onClick: () => setModal({ type: "new-folder" }) },
+            ]}
           />
-          <button
-            type="button"
-            onClick={() => setFiltersOpen(false)}
-            className="mt-6 w-full rounded-md bg-[var(--color-accent)] py-3 text-[15px] font-semibold text-[var(--color-accent-contrast)] hover:bg-[var(--color-accent-hover)]"
-          >
-            Done
-          </button>
-        </Modal>
-      )}
+        )}
+      </AnimatePresence>
 
-      {modal?.type === "new-folder" && (
-        <NameModal
-          title="New folder"
-          label="Folder name"
-          confirmLabel="Create"
-          onCancel={closeModal}
-          onConfirm={handleCreateFolder}
-          isSubmitting={createFolderMutation.isPending}
-          error={modalError}
-        />
-      )}
+      <AnimatePresence>
+        {filtersOpen && (
+          <Modal key="filters" title="Filters" onClose={() => setFiltersOpen(false)}>
+            <FilterControls
+              mimeTypeFilter={mimeTypeFilter}
+              sortBy={sortBy}
+              order={order}
+              onMimeTypeChange={(value) => updateFilter("mimeType", value)}
+              onSortByChange={(value) => updateFilter("sortBy", value)}
+              onToggleOrder={() => updateFilter("order", order === "asc" ? "desc" : "asc")}
+              stacked
+            />
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(false)}
+              className="mt-6 w-full rounded-md bg-[var(--color-accent)] py-3 text-[15px] font-semibold text-[var(--color-accent-contrast)] hover:bg-[var(--color-accent-hover)]"
+            >
+              Done
+            </button>
+          </Modal>
+        )}
+      </AnimatePresence>
 
-      {modal?.type === "rename-file" && (
-        <NameModal
-          title="Rename file"
-          label="File name"
-          initialValue={modal.file.name}
-          onCancel={closeModal}
-          onConfirm={handleRename}
-          isSubmitting={renameFileMutation.isPending}
-          error={modalError}
-        />
-      )}
+      <AnimatePresence>
+        {modal?.type === "new-folder" && (
+          <NameModal
+            key="new-folder"
+            title="New folder"
+            label="Folder name"
+            confirmLabel="Create"
+            onCancel={closeModal}
+            onConfirm={handleCreateFolder}
+            isSubmitting={createFolderMutation.isPending}
+            error={modalError}
+          />
+        )}
 
-      {modal?.type === "rename-folder" && (
-        <NameModal
-          title="Rename folder"
-          label="Folder name"
-          initialValue={modal.folder.name}
-          onCancel={closeModal}
-          onConfirm={handleRename}
-          isSubmitting={renameFolderMutation.isPending}
-          error={modalError}
-        />
-      )}
+        {modal?.type === "rename-file" && (
+          <NameModal
+            key="rename-file"
+            title="Rename file"
+            label="File name"
+            initialValue={modal.file.name}
+            onCancel={closeModal}
+            onConfirm={handleRename}
+            isSubmitting={renameFileMutation.isPending}
+            error={modalError}
+          />
+        )}
 
-      {modal?.type === "move-file" && (
-        <MoveModal
-          title={`Move "${modal.file.name}"`}
-          initialFolderId={modal.file.folderId}
-          onCancel={closeModal}
-          onConfirm={handleMove}
-          isSubmitting={moveFileMutation.isPending}
-          error={modalError}
-        />
-      )}
+        {modal?.type === "rename-folder" && (
+          <NameModal
+            key="rename-folder"
+            title="Rename folder"
+            label="Folder name"
+            initialValue={modal.folder.name}
+            onCancel={closeModal}
+            onConfirm={handleRename}
+            isSubmitting={renameFolderMutation.isPending}
+            error={modalError}
+          />
+        )}
 
-      {modal?.type === "move-folder" && (
-        <MoveModal
-          title={`Move "${modal.folder.name}"`}
-          initialFolderId={modal.folder.parentId}
-          disabledFolderId={modal.folder.id}
-          onCancel={closeModal}
-          onConfirm={handleMove}
-          isSubmitting={moveFolderMutation.isPending}
-          error={modalError}
-        />
-      )}
+        {modal?.type === "move-file" && (
+          <MoveModal
+            key="move-file"
+            title={`Move "${modal.file.name}"`}
+            initialFolderId={modal.file.folderId}
+            onCancel={closeModal}
+            onConfirm={handleMove}
+            isSubmitting={moveFileMutation.isPending}
+            error={modalError}
+          />
+        )}
 
-      {modal?.type === "delete-file" && (
-        <ConfirmDialog
-          title="Delete file"
-          message={`Move "${modal.file.name}" to the trash?`}
-          onCancel={closeModal}
-          onConfirm={handleDelete}
-          isSubmitting={deleteFileMutation.isPending}
-          error={modalError}
-        />
-      )}
+        {modal?.type === "move-folder" && (
+          <MoveModal
+            key="move-folder"
+            title={`Move "${modal.folder.name}"`}
+            initialFolderId={modal.folder.parentId}
+            disabledFolderId={modal.folder.id}
+            onCancel={closeModal}
+            onConfirm={handleMove}
+            isSubmitting={moveFolderMutation.isPending}
+            error={modalError}
+          />
+        )}
 
-      {modal?.type === "delete-folder" && (
-        <ConfirmDialog
-          title="Delete folder"
-          message={`Move "${modal.folder.name}" and everything inside it to the trash?`}
-          onCancel={closeModal}
-          onConfirm={handleDelete}
-          isSubmitting={deleteFolderMutation.isPending}
-          error={modalError}
-        />
-      )}
+        {modal?.type === "delete-file" && (
+          <ConfirmDialog
+            key="delete-file"
+            title="Delete file"
+            message={`Move "${modal.file.name}" to the trash?`}
+            onCancel={closeModal}
+            onConfirm={handleDelete}
+            isSubmitting={deleteFileMutation.isPending}
+            error={modalError}
+          />
+        )}
 
-      {modal?.type === "share-file" && (
-        <ShareModal
-          file={modal.file}
-          shareUrl={shareResult ? getShareUrl(shareResult.token) : null}
-          isSubmitting={createShareLinkMutation.isPending}
-          error={modalError}
-          onCancel={closeModal}
-          onCreate={handleCreateShare}
-        />
-      )}
+        {modal?.type === "delete-folder" && (
+          <ConfirmDialog
+            key="delete-folder"
+            title="Delete folder"
+            message={`Move "${modal.folder.name}" and everything inside it to the trash?`}
+            onCancel={closeModal}
+            onConfirm={handleDelete}
+            isSubmitting={deleteFolderMutation.isPending}
+            error={modalError}
+          />
+        )}
 
-      {modal?.type === "register-user" && (
-        <RegisterUserModal
-          onCancel={closeModal}
-          onSubmit={handleRegisterUser}
-          isSubmitting={registerUserMutation.isPending}
-          error={modalError}
-        />
-      )}
+        {modal?.type === "share-file" && (
+          <ShareModal
+            key="share-file"
+            file={modal.file}
+            shareUrl={shareResult ? getShareUrl(shareResult.token) : null}
+            isSubmitting={createShareLinkMutation.isPending}
+            error={modalError}
+            onCancel={closeModal}
+            onCreate={handleCreateShare}
+          />
+        )}
 
-      {bulkDeleteOpen && (
-        <ConfirmDialog
-          title="Delete items"
-          message={`Move ${selectedCount} item(s) to the trash?`}
-          onCancel={() => {
-            setBulkDeleteOpen(false);
-            setBulkDeleteError(null);
-          }}
-          onConfirm={handleBulkDelete}
-          isSubmitting={bulkDeleteMutation.isPending}
-          error={bulkDeleteError}
-        />
-      )}
+        {modal?.type === "register-user" && (
+          <RegisterUserModal
+            key="register-user"
+            onCancel={closeModal}
+            onSubmit={handleRegisterUser}
+            isSubmitting={registerUserMutation.isPending}
+            error={modalError}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {bulkDeleteOpen && (
+          <ConfirmDialog
+            key="bulk-delete"
+            title="Delete items"
+            message={`Move ${selectedCount} item(s) to the trash?`}
+            onCancel={() => {
+              setBulkDeleteOpen(false);
+              setBulkDeleteError(null);
+            }}
+            onConfirm={handleBulkDelete}
+            isSubmitting={bulkDeleteMutation.isPending}
+            error={bulkDeleteError}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

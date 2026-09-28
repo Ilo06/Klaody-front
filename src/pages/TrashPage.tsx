@@ -454,20 +454,23 @@ export default function TrashPage() {
         </div>
       </main>
 
-      {emptyDialogOpen && (
-        <ConfirmDialog
-          title="Empty trash"
-          message="Permanently delete everything in the trash? This includes the stored file contents and cannot be undone."
-          confirmLabel="Delete forever"
-          isSubmitting={emptyTrashMutation.isPending}
-          error={emptyError}
-          onCancel={() => {
-            setEmptyDialogOpen(false);
-            setEmptyError(null);
-          }}
-          onConfirm={handleEmptyTrash}
-        />
-      )}
+      <AnimatePresence>
+        {emptyDialogOpen && (
+          <ConfirmDialog
+            key="empty-trash"
+            title="Empty trash"
+            message="Permanently delete everything in the trash? This includes the stored file contents and cannot be undone."
+            confirmLabel="Delete forever"
+            isSubmitting={emptyTrashMutation.isPending}
+            error={emptyError}
+            onCancel={() => {
+              setEmptyDialogOpen(false);
+              setEmptyError(null);
+            }}
+            onConfirm={handleEmptyTrash}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

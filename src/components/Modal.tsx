@@ -8,16 +8,13 @@ interface ModalProps {
   children: ReactNode;
 }
 
-/**
- * Bottom sheet on small screens (slides up, rounded top corners, drag
- * handle), a centered dialog from `sm` up. Used for every form-style
- * overlay (rename, move, filters).
- */
+
 export default function Modal({ title, onClose, children }: ModalProps) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:px-4"
       onClick={onClose}
@@ -25,6 +22,7 @@ export default function Modal({ title, onClose, children }: ModalProps) {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 16, transition: { duration: 0.15 } }}
         transition={{ duration: 0.2, ease: "easeOut" }}
         className="max-h-[85vh] w-full overflow-y-auto rounded-t-2xl border-t border-[var(--color-border)] bg-[var(--color-surface)] p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-xl sm:max-w-md sm:rounded-xl sm:border"
         onClick={(event) => event.stopPropagation()}

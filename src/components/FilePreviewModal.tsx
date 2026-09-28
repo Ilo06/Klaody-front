@@ -74,20 +74,14 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
       className="fixed inset-0 z-50 flex flex-col bg-[var(--color-surface)] sm:items-center sm:justify-center sm:bg-black/50 sm:p-6"
     >
-      {/*
-        `sm:h-[85vh]` (a definite height) instead of `sm:h-auto` + `max-h`.
-        With only `h-auto`, this container had no resolvable height, so the
-        `flex-1` preview area below and the PDF iframe's `h-full` had nothing
-        to size against and collapsed to their intrinsic (tiny) height on
-        desktop. Giving the card a real height fixes that for every preview
-        type, PDFs included, and `max-h` still protects short viewports.
-      */}
       <motion.div
         initial={{ opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 12, scale: 0.98, transition: { duration: 0.15 } }}
         transition={{ duration: 0.2, ease: "easeOut" }}
         className="flex h-full w-full flex-col overflow-hidden sm:h-[85vh] sm:max-h-[85vh] sm:w-[90vw] sm:max-w-4xl sm:rounded-xl sm:border sm:border-[var(--color-border)] sm:bg-[var(--color-surface)] sm:shadow-2xl"
       >

@@ -32,6 +32,7 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import {
   ApiError,
+  UUID_REGEX,
   downloadFile,
   getShareUrl,
   type FileMetadata,
@@ -131,8 +132,7 @@ function FilterControls({
 
 export default function FilesPage() {
   const { folderId: folderIdParam } = useParams<{ folderId?: string }>();
-  const parsedFolderId = folderIdParam ? Number(folderIdParam) : null;
-  const currentFolderId = Number.isNaN(parsedFolderId) ? null : parsedFolderId;
+  const currentFolderId = folderIdParam && UUID_REGEX.test(folderIdParam) ? folderIdParam : null;
 
   const navigate = useNavigate();
   const { clearSession, isAdmin } = useAuth();
@@ -156,14 +156,14 @@ export default function FilesPage() {
   const [fabOpen, setFabOpen] = useState(false);
 
   const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
-  const [selectedFolderIds, setSelectedFolderIds] = useState<Set<number>>(new Set());
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
+  const [selectedFolderIds, setSelectedFolderIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
 
   const allFoldersQuery = useAllFolders();
   const foldersById = useMemo(() => {
-    const map = new Map<number, FolderMetadata>();
+    const map = new Map<string, FolderMetadata>();
     for (const folder of allFoldersQuery.data ?? []) map.set(folder.id, folder);
     return map;
   }, [allFoldersQuery.data]);
@@ -267,7 +267,7 @@ export default function FilesPage() {
     );
   };
 
-  const goToFolder = (folderId: number | null) => {
+  const goToFolder = (folderId: string | null) => {
     navigate(folderId === null ? "/files" : `/files/${folderId}`);
   };
 
@@ -332,7 +332,7 @@ export default function FilesPage() {
     }
   };
 
-  const handleMove = (destinationId: number | null) => {
+  const handleMove = (destinationId: string | null) => {
     if (!modal) return;
     setModalError(null);
     if (modal.type === "move-file") {

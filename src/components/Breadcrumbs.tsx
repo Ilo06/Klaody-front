@@ -3,7 +3,7 @@ import type { FolderMetadata } from "../lib/api";
 
 interface BreadcrumbsProps {
   path: FolderMetadata[];
-  onNavigate: (folderId: number | null) => void;
+  onNavigate: (folderId: string | null) => void;
 }
 
 export default function Breadcrumbs({ path, onNavigate }: BreadcrumbsProps) {

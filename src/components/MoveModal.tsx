@@ -7,11 +7,11 @@ import { useAllFolders, useFolders } from "../hooks/useFileBrowser";
 
 interface MoveModalProps {
   title: string;
-  initialFolderId: number | null;
+  initialFolderId: string | null;
   /** The item's own id, when moving a folder — you can't move a folder into itself. */
-  disabledFolderId?: number;
+  disabledFolderId?: string;
   onCancel: () => void;
-  onConfirm: (destinationId: number | null) => void;
+  onConfirm: (destinationId: string | null) => void;
   isSubmitting?: boolean;
   error?: string | null;
 }
@@ -25,12 +25,12 @@ export default function MoveModal({
   isSubmitting,
   error,
 }: MoveModalProps) {
-  const [browsingId, setBrowsingId] = useState<number | null>(initialFolderId);
+  const [browsingId, setBrowsingId] = useState<string | null>(initialFolderId);
   const allFoldersQuery = useAllFolders();
   const subfoldersQuery = useFolders(browsingId);
 
   const foldersById = useMemo(() => {
-    const map = new Map<number, { id: number; name: string; parentId: number | null }>();
+    const map = new Map<string, { id: string; name: string; parentId: string | null }>();
     for (const folder of allFoldersQuery.data ?? []) map.set(folder.id, folder);
     return map;
   }, [allFoldersQuery.data]);

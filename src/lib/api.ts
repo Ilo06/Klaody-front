@@ -6,6 +6,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000
 // dependency on the context tree and can be used from anywhere (hooks, utils).
 const TOKEN_KEY = "klaody.token";
 
+/** Matches any canonical UUID (v1–v8), used to validate ids coming from the URL. */
+export const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 /** Dispatched on any 401 response so AuthContext can clear the session. */
 export const AUTH_EXPIRED_EVENT = "klaody:auth-expired";
 
@@ -15,19 +18,19 @@ export interface LoginResponse {
 }
 
 export interface FileMetadata {
-  id: number;
+  id: string;
   name: string;
   mimeType: string;
   size: number;
-  folderId: number | null;
+  folderId: string | null;
   uploadedAt: string;
   deletedAt: string | null;
 }
 
 export interface FolderMetadata {
-  id: number;
+  id: string;
   name: string;
-  parentId: number | null;
+  parentId: string | null;
   createdAt: string;
   deletedAt: string | null;
 }
@@ -42,14 +45,14 @@ export interface StorageInfo {
 }
 
 export interface FileUploadResponse {
-  id: number;
+  id: string;
   name: string;
   size: number;
-  folderId: number | null;
+  folderId: string | null;
 }
 
 export interface ListFilesParams {
-  folderId?: number | "root";
+  folderId?: string | "root";
   name?: string;
   mimeType?: string;
   minSize?: number;
@@ -61,7 +64,7 @@ export interface ListFilesParams {
 }
 
 export interface ListFoldersParams {
-  parentId?: number | "root";
+  parentId?: string | "root";
   name?: string;
   createdAfter?: string;
   createdBefore?: string;
@@ -84,7 +87,7 @@ export class ApiError extends Error {
 }
 
 export interface CurrentUser {
-  id: number;
+  id: string;
   email: string;
   isAdmin: boolean;
 }
@@ -178,7 +181,7 @@ export async function listFiles(params: ListFilesParams = {}): Promise<FileMetad
 
 export async function uploadFile(
   file: File,
-  folderId: number | null,
+  folderId: string | null,
   options: { signal?: AbortSignal; onProgress?: (percent: number) => void } = {},
 ): Promise<FileUploadResponse> {
   const formData = new FormData();
@@ -196,33 +199,33 @@ export async function uploadFile(
   return data;
 }
 
-async function fetchFileResponse(id: number) {
+async function fetchFileResponse(id: string) {
   return apiClient.get<Blob>(`/files/${id}`, { responseType: "blob" });
 }
 
 //Fetches a file's bytes without triggering a save — for in-app preview
-export async function fetchFileBlob(id: number): Promise<Blob> {
+export async function fetchFileBlob(id: string): Promise<Blob> {
   const response = await fetchFileResponse(id);
   return response.data;
 }
 
-export async function downloadFile(id: number, fallbackName: string): Promise<void> {
+export async function downloadFile(id: string, fallbackName: string): Promise<void> {
   const response = await fetchFileResponse(id);
   const filename = parseFilenameFromDisposition(response.headers["content-disposition"]) ?? fallbackName;
   triggerBrowserDownload(response.data, filename);
 }
 
-export async function renameFile(id: number, name: string): Promise<FileMetadata> {
+export async function renameFile(id: string, name: string): Promise<FileMetadata> {
   const { data } = await apiClient.patch<FileMetadata>(`/files/${id}/rename`, { name });
   return data;
 }
 
-export async function moveFile(id: number, folderId: number | null): Promise<FileMetadata> {
+export async function moveFile(id: string, folderId: string | null): Promise<FileMetadata> {
   const { data } = await apiClient.patch<FileMetadata>(`/files/${id}/move`, { folderId });
   return data;
 }
 
-export async function deleteFile(id: number): Promise<void> {
+export async function deleteFile(id: string): Promise<void> {
   await apiClient.delete(`/files/${id}`);
 }
 
@@ -235,7 +238,7 @@ export function getShareUrl(token: string): string {
   return `${API_BASE_URL}/share/${token}`;
 }
 
-export async function createShareLink(id: number, expiresIn?: number): Promise<ShareResponse> {
+export async function createShareLink(id: string, expiresIn?: number): Promise<ShareResponse> {
   const { data } = await apiClient.post<ShareResponse>(`/files/${id}/share`, expiresIn ? { expiresIn } : {});
   return data;
 }
@@ -247,22 +250,22 @@ export async function listFolders(params: ListFoldersParams = {}): Promise<Folde
   return data;
 }
 
-export async function createFolder(name: string, parentId: number | null): Promise<FolderMetadata> {
+export async function createFolder(name: string, parentId: string | null): Promise<FolderMetadata> {
   const { data } = await apiClient.post<FolderMetadata>("/folders", { name, parentId });
   return data;
 }
 
-export async function renameFolder(id: number, name: string): Promise<FolderMetadata> {
+export async function renameFolder(id: string, name: string): Promise<FolderMetadata> {
   const { data } = await apiClient.patch<FolderMetadata>(`/folders/${id}/rename`, { name });
   return data;
 }
 
-export async function moveFolder(id: number, parentId: number | null): Promise<FolderMetadata> {
+export async function moveFolder(id: string, parentId: string | null): Promise<FolderMetadata> {
   const { data } = await apiClient.patch<FolderMetadata>(`/folders/${id}/move`, { parentId });
   return data;
 }
 
-export async function deleteFolder(id: number): Promise<void> {
+export async function deleteFolder(id: string): Promise<void> {
   await apiClient.delete(`/folders/${id}`);
 }
 
@@ -283,13 +286,13 @@ export interface TrashListing {
 
 /** At most 1000 ids (files + folders combined); duplicates are ignored by the API. */
 export interface BulkItemsRequest {
-  fileIds?: number[];
-  folderIds?: number[];
+  fileIds?: string[];
+  folderIds?: string[];
 }
 
 export interface BulkItemRef {
   type: "file" | "folder";
-  id: number;
+  id: string;
 }
 
 export interface BulkFailure extends BulkItemRef {
@@ -319,12 +322,12 @@ export async function bulkMoveToTrash(items: BulkItemsRequest): Promise<BulkResu
   return data;
 }
 
-export async function restoreFile(id: number): Promise<FileMetadata> {
+export async function restoreFile(id: string): Promise<FileMetadata> {
   const { data } = await apiClient.post<FileMetadata>(`/trash/files/${id}/restore`);
   return data;
 }
 
-export async function restoreFolder(id: number): Promise<FolderMetadata> {
+export async function restoreFolder(id: string): Promise<FolderMetadata> {
   const { data } = await apiClient.post<FolderMetadata>(`/trash/folders/${id}/restore`);
   return data;
 }

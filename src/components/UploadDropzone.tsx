@@ -22,7 +22,7 @@ export interface UploadDropzoneHandle {
 }
 
 interface UploadDropzoneProps {
-  folderId: number | null;
+  folderId: string | null;
   onUploaded: () => void;
 }
 

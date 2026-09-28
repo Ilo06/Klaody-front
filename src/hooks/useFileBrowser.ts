@@ -28,7 +28,7 @@ export function useStorageInfo() {
   });
 }
 
-export function useFiles(folderId: number | null, filters: Omit<ListFilesParams, "folderId">) {
+export function useFiles(folderId: string | null, filters: Omit<ListFilesParams, "folderId">) {
   return useQuery<FileMetadata[]>({
     queryKey: ["files", folderId, filters],
     queryFn: () => listFiles({ folderId: folderId ?? "root", ...filters }),
@@ -36,11 +36,11 @@ export function useFiles(folderId: number | null, filters: Omit<ListFilesParams,
 }
 export function useCreateShareLink() {
   return useMutation({
-    mutationFn: ({ id, expiresIn }: { id: number; expiresIn?: number }) => createShareLink(id, expiresIn),
+    mutationFn: ({ id, expiresIn }: { id: string; expiresIn?: number }) => createShareLink(id, expiresIn),
   });
 }
 
-export function useFolders(parentId: number | null) {
+export function useFolders(parentId: string | null) {
   return useQuery<FolderMetadata[]>({
     queryKey: ["folders", parentId],
     queryFn: () => listFolders({ parentId: parentId ?? "root" }),
@@ -62,7 +62,7 @@ export function useAllFolders() {
 export function useCreateFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ name, parentId }: { name: string; parentId: number | null }) =>
+    mutationFn: ({ name, parentId }: { name: string; parentId: string | null }) =>
       createFolder(name, parentId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["folders"] }),
   });
@@ -71,7 +71,7 @@ export function useCreateFolder() {
 export function useRenameFile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) => renameFile(id, name),
+    mutationFn: ({ id, name }: { id: string; name: string }) => renameFile(id, name),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["files"] }),
   });
 }
@@ -79,7 +79,7 @@ export function useRenameFile() {
 export function useRenameFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) => renameFolder(id, name),
+    mutationFn: ({ id, name }: { id: string; name: string }) => renameFolder(id, name),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["folders"] }),
   });
 }
@@ -87,7 +87,7 @@ export function useRenameFolder() {
 export function useMoveFile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, folderId }: { id: number; folderId: number | null }) => moveFile(id, folderId),
+    mutationFn: ({ id, folderId }: { id: string; folderId: string | null }) => moveFile(id, folderId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["files"] }),
   });
 }
@@ -95,7 +95,7 @@ export function useMoveFile() {
 export function useMoveFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, parentId }: { id: number; parentId: number | null }) => moveFolder(id, parentId),
+    mutationFn: ({ id, parentId }: { id: string; parentId: string | null }) => moveFolder(id, parentId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["folders"] }),
   });
 }
@@ -103,7 +103,7 @@ export function useMoveFolder() {
 export function useDeleteFile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => deleteFile(id),
+    mutationFn: (id: string) => deleteFile(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["files"] }),
   });
 }
@@ -111,7 +111,7 @@ export function useDeleteFile() {
 export function useDeleteFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => deleteFolder(id),
+    mutationFn: (id: string) => deleteFolder(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["folders"] });
       queryClient.invalidateQueries({ queryKey: ["files"] });

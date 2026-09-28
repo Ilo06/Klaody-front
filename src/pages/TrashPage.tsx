@@ -43,8 +43,8 @@ export default function TrashPage() {
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
-  const [selectedFolderIds, setSelectedFolderIds] = useState<Set<number>>(new Set());
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
+  const [selectedFolderIds, setSelectedFolderIds] = useState<Set<string>>(new Set());
 
   const trashQuery = useTrash({
     name: nameFilter || undefined,

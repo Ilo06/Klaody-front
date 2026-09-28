@@ -29,7 +29,7 @@ function invalidateAfterRestore(queryClient: QueryClient) {
 export function useRestoreFile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => restoreFile(id),
+    mutationFn: (id: string) => restoreFile(id),
     onSuccess: () => invalidateAfterRestore(queryClient),
   });
 }
@@ -37,7 +37,7 @@ export function useRestoreFile() {
 export function useRestoreFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => restoreFolder(id),
+    mutationFn: (id: string) => restoreFolder(id),
     onSuccess: () => invalidateAfterRestore(queryClient),
   });
 }

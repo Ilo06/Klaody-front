@@ -22,8 +22,8 @@ interface BrowserTableProps {
   onShareFile: (file: FileMetadata) => void;
   /** When true, rows show a checkbox and tapping a row toggles selection instead of opening/previewing it. */
   selectionMode?: boolean;
-  selectedFileIds?: Set<number>;
-  selectedFolderIds?: Set<number>;
+  selectedFileIds?: Set<string>;
+  selectedFolderIds?: Set<string>;
   onToggleFileSelected?: (file: FileMetadata) => void;
   onToggleFolderSelected?: (folder: FolderMetadata) => void;
 }

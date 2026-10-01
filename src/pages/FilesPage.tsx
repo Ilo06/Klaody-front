@@ -10,6 +10,7 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  Sparkles,
   Trash2,
   UploadCloud,
   UserPlus,
@@ -40,6 +41,7 @@ import {
   type ShareResponse,
 } from "../lib/api";
 import {
+  MIN_CONTENT_QUERY_LENGTH,
   useAllFolders,
   useBulkDelete,
   useCreateFolder,
@@ -48,6 +50,7 @@ import {
   useDeleteFolder,
   useFiles,
   useFolders,
+  useImageSearch,
   useMoveFile,
   useMoveFolder,
   useRenameFile,
@@ -146,7 +149,11 @@ export default function FilesPage() {
   const sortBy = (searchParams.get("sortBy") as "name" | "size" | "uploadedAt") || "uploadedAt";
   const order = (searchParams.get("order") as "asc" | "desc") || "desc";
 
-  const [searchInput, setSearchInput] = useState(nameFilter);
+  // Two ways to search: by file name (?name=) or by what the images show (?mode=content&q=).
+  const contentMode = searchParams.get("mode") === "content";
+  const contentQuery = searchParams.get("q") ?? "";
+
+  const [searchInput, setSearchInput] = useState(contentMode ? contentQuery : nameFilter);
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [modal, setModal] = useState<ModalState>(null);
@@ -180,11 +187,15 @@ export default function FilesPage() {
 
   const foldersQuery = useFolders(currentFolderId);
   const filesQuery = useFiles(currentFolderId, {
-    name: nameFilter || undefined,
+    name: contentMode ? undefined : nameFilter || undefined,
     mimeType: mimeTypeFilter || undefined,
     sortBy,
     order,
   });
+
+  // Content search looks at every image the user owns, whatever the current folder.
+  const contentSearching = contentMode && contentQuery.trim().length >= MIN_CONTENT_QUERY_LENGTH;
+  const searchQuery = useImageSearch(contentSearching ? contentQuery : "");
 
   const createFolderMutation = useCreateFolder();
   const renameFileMutation = useRenameFile();
@@ -228,8 +239,8 @@ export default function FilesPage() {
     });
   };
 
-  const visibleFolders = foldersQuery.data ?? [];
-  const visibleFiles = filesQuery.data ?? [];
+  const visibleFolders = contentSearching ? [] : (foldersQuery.data ?? []);
+  const visibleFiles = contentSearching ? (searchQuery.data ?? []) : (filesQuery.data ?? []);
   const selectedCount = selectedFileIds.size + selectedFolderIds.size;
   const allVisibleSelected =
     visibleFolders.length + visibleFiles.length > 0 &&
@@ -281,7 +292,33 @@ export default function FilesPage() {
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
-    searchDebounce.current = setTimeout(() => updateFilter("name", value), 350);
+    // Content search runs a model on the server, so wait a little longer before firing.
+    searchDebounce.current = setTimeout(
+      () => updateFilter(contentMode ? "q" : "name", value),
+      contentMode ? 450 : 350,
+    );
+  };
+
+  // Switches between "by name" and "by content", carrying the typed text over to the other mode.
+  const toggleContentMode = () => {
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    const next = new URLSearchParams(searchParams);
+    next.delete("name");
+    next.delete("q");
+    if (contentMode) {
+      next.delete("mode");
+      if (searchInput) next.set("name", searchInput);
+    } else {
+      next.set("mode", "content");
+      if (searchInput) next.set("q", searchInput);
+    }
+    setSearchParams(next, { replace: true });
+  };
+
+  const clearContentSearch = () => {
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    setSearchInput("");
+    updateFilter("q", "");
   };
 
   const closeModal = () => {
@@ -413,8 +450,8 @@ export default function FilesPage() {
     }
   };
 
-  const isLoading = foldersQuery.isLoading || filesQuery.isLoading;
-  const loadError = foldersQuery.error ?? filesQuery.error;
+  const isLoading = contentSearching ? searchQuery.isLoading : foldersQuery.isLoading || filesQuery.isLoading;
+  const loadError = contentSearching ? searchQuery.error : (foldersQuery.error ?? filesQuery.error);
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
@@ -514,10 +551,25 @@ export default function FilesPage() {
                   type="text"
                   value={searchInput}
                   onChange={(event) => handleSearchChange(event.target.value)}
-                  placeholder="Search by name"
+                  placeholder={contentMode ? "Describe what's in the image (e.g. car, beach)" : "Search by name"}
                   className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
                 />
               </div>
+
+              <button
+                type="button"
+                onClick={toggleContentMode}
+                aria-pressed={contentMode}
+                aria-label="Search by image content"
+                title={contentMode ? "Searching by image content — click to search by name" : "Search by image content"}
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border sm:h-9 sm:w-9 ${
+                  contentMode
+                    ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
+                    : "border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)]"
+                }`}
+              >
+                <Sparkles className="h-[15px] w-[15px]" />
+              </button>
 
               <button
                 type="button"
@@ -553,6 +605,33 @@ export default function FilesPage() {
           )}
         </AnimatePresence>
 
+        {contentMode && !selectionMode && (
+          <p className="mt-3 flex min-h-[20px] items-center gap-2 text-[13px] text-[var(--color-ink-muted)]">
+            {contentSearching ? (
+              <>
+                <span className="min-w-0 truncate">
+                  {searchQuery.isFetching && !searchQuery.isLoading
+                    ? "Searching…"
+                    : `Images matching “${contentQuery.trim()}” in all folders`}
+                </span>
+                <button
+                  type="button"
+                  onClick={clearContentSearch}
+                  className="shrink-0 font-medium text-[var(--color-accent)] hover:underline"
+                >
+                  Clear
+                </button>
+              </>
+            ) : (
+              <span>
+                {searchInput.trim().length === 0
+                  ? "Find images by what they show, in all folders."
+                  : `Type at least ${MIN_CONTENT_QUERY_LENGTH} characters to search.`}
+              </span>
+            )}
+          </p>
+        )}
+
         <div className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:px-5">
           <AnimatePresence mode="wait" initial={false}>
             {isLoading ? (
@@ -581,7 +660,7 @@ export default function FilesPage() {
               </motion.div>
             ) : (
               <motion.div
-                key={`content-${currentFolderId ?? "root"}`}
+                key={contentSearching ? `search-${contentQuery.trim()}` : `content-${currentFolderId ?? "root"}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -604,6 +683,14 @@ export default function FilesPage() {
                   selectedFolderIds={selectedFolderIds}
                   onToggleFileSelected={toggleFileSelected}
                   onToggleFolderSelected={toggleFolderSelected}
+                  emptyState={
+                    contentSearching
+                      ? {
+                          title: "No matching images",
+                          hint: "Try another word, or wait a few seconds if you just uploaded the image.",
+                        }
+                      : undefined
+                  }
                 />
               </motion.div>
             )}

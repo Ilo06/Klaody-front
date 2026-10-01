@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Folder, FolderInput, Link2, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Download, Folder, FolderInput, Link2, Loader2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
 import FilePreviewModal from "./FilePreviewModal";
 import type { FileMetadata, FolderMetadata } from "../lib/api";
@@ -26,6 +26,8 @@ interface BrowserTableProps {
   selectedFolderIds?: Set<string>;
   onToggleFileSelected?: (file: FileMetadata) => void;
   onToggleFolderSelected?: (folder: FolderMetadata) => void;
+  /** Replaces the default "This folder is empty" message (e.g. for an empty search result). */
+  emptyState?: { title: string; hint: string };
 }
 
 type ActiveSheet = { kind: "folder"; folder: FolderMetadata } | { kind: "file"; file: FileMetadata } | null;
@@ -47,6 +49,7 @@ export default function BrowserTable({
   selectedFolderIds,
   onToggleFileSelected,
   onToggleFolderSelected,
+  emptyState = { title: "This folder is empty", hint: "Upload files or create a folder to get started." },
 }: BrowserTableProps) {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
   const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
@@ -60,10 +63,8 @@ export default function BrowserTable({
         className="flex flex-col items-center justify-center px-4 py-24 text-center"
       >
         <Folder className="h-8 w-8 text-[var(--color-ink-muted)]" />
-        <h2 className="mt-4 text-[18px]">This folder is empty</h2>
-        <p className="mt-1.5 text-[14px] text-[var(--color-ink-muted)]">
-          Upload files or create a folder to get started.
-        </p>
+        <h2 className="mt-4 text-[18px]">{emptyState.title}</h2>
+        <p className="mt-1.5 text-[14px] text-[var(--color-ink-muted)]">{emptyState.hint}</p>
       </motion.div>
     );
   }
@@ -164,6 +165,17 @@ export default function BrowserTable({
                   <span className="block truncate text-[15px]">{file.name}</span>
                   <span className="block truncate text-[12px] text-[var(--color-ink-muted)]">
                     {formatBytes(file.size)} · {format(new Date(file.uploadedAt), "MMM d, yyyy")}
+                    {file.indexStatus === "PENDING" && (
+                      <span className="ml-2 inline-flex items-center gap-1" title="Not searchable by content yet">
+                        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                        Indexing…
+                      </span>
+                    )}
+                    {file.indexStatus === "FAILED" && (
+                      <span className="ml-2" title="Content search could not index this image">
+                        · Not indexed
+                      </span>
+                    )}
                   </span>
                 </span>
               </button>

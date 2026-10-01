@@ -17,6 +17,12 @@ export interface LoginResponse {
   expiresIn: number;
 }
 
+/**
+ * State of the background CLIP indexing that powers content search.
+ * NONE = not an indexable image, PENDING = queued, DONE = searchable, FAILED = gave up after retries.
+ */
+export type IndexStatus = "NONE" | "PENDING" | "DONE" | "FAILED";
+
 export interface FileMetadata {
   id: string;
   name: string;
@@ -25,6 +31,13 @@ export interface FileMetadata {
   folderId: string | null;
   uploadedAt: string;
   deletedAt: string | null;
+  /** Absent on endpoints that don't report it (e.g. the trash). */
+  indexStatus?: IndexStatus;
+}
+
+/** A content-search hit: a normal file plus how close it is to the query (higher = closer). */
+export interface ImageSearchResult extends FileMetadata {
+  similarity: number;
 }
 
 export interface FolderMetadata {
@@ -49,6 +62,7 @@ export interface FileUploadResponse {
   name: string;
   size: number;
   folderId: string | null;
+  indexStatus?: IndexStatus;
 }
 
 export interface ListFilesParams {
@@ -176,6 +190,23 @@ export async function registerUser(
 
 export async function listFiles(params: ListFilesParams = {}): Promise<FileMetadata[]> {
   const { data } = await apiClient.get<FileMetadata[]>("/files", { params });
+  return data;
+}
+
+export interface SearchImagesOptions {
+  limit?: number;
+  /** Overrides the server's default similarity threshold (-1..1). */
+  minSimilarity?: number;
+  signal?: AbortSignal;
+}
+
+/** Content search: images whose *content* matches the text (e.g. "car"), best match first. */
+export async function searchImages(q: string, options: SearchImagesOptions = {}): Promise<ImageSearchResult[]> {
+  const { limit, minSimilarity, signal } = options;
+  const { data } = await apiClient.get<ImageSearchResult[]>("/files/search", {
+    params: { q, limit, minSimilarity },
+    signal,
+  });
   return data;
 }
 

@@ -9,12 +9,14 @@ import {
   listFiles,
   listFolders,
   moveFile,
+  searchImages,
   moveFolder,
   renameFile,
   renameFolder,
   type BulkItemsRequest,
   type FileMetadata,
   type FolderMetadata,
+  type ImageSearchResult,
   type ListFilesParams,
   type StorageInfo,
 } from "../lib/api";
@@ -28,12 +30,32 @@ export function useStorageInfo() {
   });
 }
 
+/** How often to re-check a folder while some of its images are still being indexed. */
+const INDEXING_POLL_MS = 3_000;
+
 export function useFiles(folderId: string | null, filters: Omit<ListFilesParams, "folderId">) {
   return useQuery<FileMetadata[]>({
     queryKey: ["files", folderId, filters],
     queryFn: () => listFiles({ folderId: folderId ?? "root", ...filters }),
+    
+    refetchInterval: (query) =>
+      query.state.data?.some((file) => file.indexStatus === "PENDING") ? INDEXING_POLL_MS : false,
   });
 }
+
+/** Shortest content-search query worth sending (each search runs a model inference on the server). */
+export const MIN_CONTENT_QUERY_LENGTH = 2;
+
+export function useImageSearch(query: string) {
+  const q = query.trim();
+  return useQuery<ImageSearchResult[]>({
+    queryKey: ["files", "search", q],
+    queryFn: ({ signal }) => searchImages(q, { limit: 50, signal }),
+    enabled: q.length >= MIN_CONTENT_QUERY_LENGTH,
+    staleTime: 30_000,
+  });
+}
+
 export function useCreateShareLink() {
   return useMutation({
     mutationFn: ({ id, expiresIn }: { id: string; expiresIn?: number }) => createShareLink(id, expiresIn),

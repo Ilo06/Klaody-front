@@ -636,7 +636,7 @@ export default function FilesPage() {
           </p>
         )}
 
-        <div className="-mx-4 mt-3 border-y border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:mx-0 sm:mt-5 sm:rounded-lg sm:border sm:px-5">
+        <div className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 sm:mt-5 sm:rounded-lg sm:px-5">
           <AnimatePresence mode="wait" initial={false}>
             {isLoading ? (
               <motion.div

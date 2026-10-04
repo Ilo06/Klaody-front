@@ -12,9 +12,9 @@ export default function StorageIndicator() {
   return (
     <div
       title={`${formatBytes(usedBytes)} used of ${formatBytes(data.totalBytes)} · ${usableLabel} usable`}
-      className="flex min-w-0 items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-[12px] font-medium text-[var(--color-ink-muted)] shadow-lg sm:px-4 sm:text-[13px]"
+      className="flex min-w-0 items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-[11px] font-medium text-[var(--color-ink-muted)] shadow-lg sm:px-4 sm:py-2.5 sm:text-[13px]"
     >
-      <span className="h-1.5 w-8 shrink-0 overflow-hidden rounded-full bg-[var(--color-border)] sm:w-12">
+      <span className="h-1.5 w-6 shrink-0 overflow-hidden rounded-full bg-[var(--color-border)] sm:w-12">
         <span
           className="block h-full rounded-full bg-[var(--color-accent)] transition-[width]"
           style={{ width: `${percentUsed}%` }}

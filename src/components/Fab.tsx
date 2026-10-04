@@ -16,7 +16,7 @@ export default function Fab({ onClick, label, icon }: FabProps) {
       aria-label={label}
       whileTap={{ scale: 0.92 }}
       transition={{ duration: 0.12 }}
-      className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-contrast)] shadow-lg hover:bg-[var(--color-accent-hover)] sm:hidden"
+      className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-contrast)] shadow-lg hover:bg-[var(--color-accent-hover)] sm:hidden"
     >
       {icon}
     </motion.button>

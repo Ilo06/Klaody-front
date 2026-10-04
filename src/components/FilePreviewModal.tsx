@@ -2,10 +2,23 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, Download, Loader2, MoreVertical, X } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
-import { ApiError, fetchFileBlob, type FileMetadata } from "../lib/api";
+import { ApiError, fetchFileBlob, fetchImagePreviewBlob, type FileMetadata } from "../lib/api";
 import { fileIcon } from "../lib/fileIcon";
 
 const MAX_TEXT_PREVIEW_BYTES = 1_000_000;
+
+// Raster formats the server can downscale. GIF/SVG are left alone (animation / vector).
+const RESIZABLE_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+// Bucketed so previews of the same size share the server-side cache.
+const PREVIEW_WIDTHS = [480, 720, 1080, 1600];
+const DESKTOP_MODAL_WIDTH = 896; // sm:max-w-4xl
+
+/** Smallest bucket that still looks sharp in the modal on this screen (device pixel ratio capped at 2). */
+function previewWidth(): number {
+  const cssWidth = Math.min(window.innerWidth, DESKTOP_MODAL_WIDTH);
+  const pixels = Math.ceil(cssWidth * Math.min(window.devicePixelRatio || 1, 2));
+  return PREVIEW_WIDTHS.find((width) => width >= pixels) ?? PREVIEW_WIDTHS[PREVIEW_WIDTHS.length - 1];
+}
 
 function isTextPreviewable(mimeType: string): boolean {
   return (
@@ -36,7 +49,13 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
     let objectUrl: string | null = null;
     setState({ status: "loading" });
 
-    fetchFileBlob(file.id)
+    // Images: load a reduced-size preview, falling back to the original if that fails.
+    // Download always goes through downloadFile(), i.e. the full-resolution original.
+    const request = RESIZABLE_IMAGE_TYPES.includes(file.mimeType)
+      ? fetchImagePreviewBlob(file.id, previewWidth()).catch(() => fetchFileBlob(file.id))
+      : fetchFileBlob(file.id);
+
+    request
       .then(async (blob) => {
         if (cancelled) return;
         objectUrl = URL.createObjectURL(blob);
@@ -85,10 +104,10 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
         transition={{ duration: 0.2, ease: "easeOut" }}
         className="flex h-full w-full flex-col overflow-hidden sm:h-[85vh] sm:max-h-[85vh] sm:w-[90vw] sm:max-w-4xl sm:rounded-xl sm:border sm:border-[var(--color-border)] sm:bg-[var(--color-surface)] sm:shadow-2xl"
       >
-        <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-4">
+        <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-4 sm:pb-3 sm:pt-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--color-ink-muted)]" />
-            <span className="truncate text-[15px]">{file.name}</span>
+            <span className="truncate text-[14px] sm:text-[15px]">{file.name}</span>
           </div>
           <div className="flex shrink-0 items-center gap-1">
             <button
@@ -96,7 +115,7 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
               onClick={onDownload}
               aria-label="Download"
               title="Download"
-              className="rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
+              className="rounded-full p-2 text-[var(--color-ink-muted)] sm:p-2.5 hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
             >
               <Download className="h-[18px] w-[18px]" />
             </button>
@@ -106,7 +125,7 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
                 onClick={() => setSheetOpen(true)}
                 aria-label="More actions"
                 title="More actions"
-                className="rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
+                className="rounded-full p-2 text-[var(--color-ink-muted)] sm:p-2.5 hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
               >
                 <MoreVertical className="h-[18px] w-[18px]" />
               </button>
@@ -116,14 +135,14 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
               onClick={onClose}
               aria-label="Close"
               title="Close"
-              className="rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
+              className="rounded-full p-2 text-[var(--color-ink-muted)] sm:p-2.5 hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
             >
               <X className="h-[18px] w-[18px]" />
             </button>
           </div>
         </header>
 
-        <div className="flex flex-1 items-center justify-center overflow-auto bg-[var(--color-bg)] p-4">
+        <div className="flex flex-1 items-center justify-center overflow-auto bg-[var(--color-bg)] p-2 sm:p-4">
           <AnimatePresence mode="wait" initial={false}>
             {state.status === "loading" && (
               <motion.div

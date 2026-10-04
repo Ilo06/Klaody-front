@@ -240,6 +240,18 @@ export async function fetchFileBlob(id: string): Promise<Blob> {
   return response.data;
 }
 
+/**
+ * Reduced-size copy of an image (resized server-side to `width` px, never upscaled) for the in-app
+ * preview. The original is only ever fetched by `downloadFile`.
+ */
+export async function fetchImagePreviewBlob(id: string, width: number): Promise<Blob> {
+  const { data } = await apiClient.get<Blob>(`/files/${id}/preview`, {
+    params: { width },
+    responseType: "blob",
+  });
+  return data;
+}
+
 export async function downloadFile(id: string, fallbackName: string): Promise<void> {
   const response = await fetchFileResponse(id);
   const filename = parseFilenameFromDisposition(response.headers["content-disposition"]) ?? fallbackName;

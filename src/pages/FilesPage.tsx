@@ -7,6 +7,7 @@ import {
   ArrowUpDown,
   CheckSquare,
   FolderPlus,
+  LogOut,
   Plus,
   Search,
   SlidersHorizontal,
@@ -455,23 +456,26 @@ export default function FilesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
-        <span className="text-[20px] font-bold tracking-tight" style={{ fontFamily: "var(--font-serif)" }}>
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
+        <span className="text-[18px] font-bold tracking-tight sm:text-[20px]" style={{ fontFamily: "var(--font-serif)" }}>
           klaody
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button
             type="button"
             onClick={() => clearSession()}
-            className="text-[13px] text-[var(--color-ink-muted)] inline-flex px-4 py-1.5 cursor-pointer items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] hover:text-[var(--color-ink)]"
+            aria-label="Sign out"
+            title="Sign out"
+            className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 text-[13px] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:h-auto sm:px-4 sm:py-1.5"
           >
-            Sign out
+            <LogOut className="h-[14px] w-[14px] sm:hidden" />
+            <span className="hidden sm:inline">Sign out</span>
           </button>
           <ThemeToggle />
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 pb-28 pt-6 sm:px-8 sm:pb-24 sm:pt-8">
+      <main className="mx-auto max-w-5xl px-4 pb-24 pt-3 sm:px-8 sm:pb-24 sm:pt-8">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <Breadcrumbs path={breadcrumbPath} onNavigate={goToFolder} />
@@ -486,7 +490,7 @@ export default function FilesPage() {
           </button>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-0 sm:mt-6">
           <UploadDropzone
             ref={uploadRef}
             folderId={currentFolderId}
@@ -505,7 +509,7 @@ export default function FilesPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5"
+              className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 sm:mt-6 sm:gap-3 sm:px-4 sm:py-2.5"
             >
               <div className="flex items-center gap-3">
                 <button
@@ -543,16 +547,16 @@ export default function FilesPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="mt-6 flex flex-wrap items-center gap-3"
+              className="mt-3 flex flex-wrap items-center gap-2 sm:mt-6 sm:gap-3"
             >
               <div className="relative min-w-[160px] flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-[14px] w-[14px] sm:left-3 -translate-y-1/2 text-[var(--color-ink-muted)]" />
                 <input
                   type="text"
                   value={searchInput}
                   onChange={(event) => handleSearchChange(event.target.value)}
-                  placeholder={contentMode ? "Describe what's in the image (e.g. car, beach)" : "Search by name"}
-                  className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
+                  placeholder={contentMode ? "Describe the image, e.g. car" : "Search by name"}
+                  className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] h-9 py-0 pl-8 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:h-auto sm:py-2 sm:pl-9 sm:text-[13px]"
                 />
               </div>
 
@@ -562,7 +566,7 @@ export default function FilesPage() {
                 aria-pressed={contentMode}
                 aria-label="Search by image content"
                 title={contentMode ? "Searching by image content — click to search by name" : "Search by image content"}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border sm:h-9 sm:w-9 ${
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${
                   contentMode
                     ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
                     : "border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)]"
@@ -575,7 +579,7 @@ export default function FilesPage() {
                 type="button"
                 onClick={() => setFiltersOpen(true)}
                 aria-label="Filters"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] sm:hidden"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] sm:hidden"
               >
                 <SlidersHorizontal className="h-[16px] w-[16px]" />
               </button>
@@ -606,7 +610,7 @@ export default function FilesPage() {
         </AnimatePresence>
 
         {contentMode && !selectionMode && (
-          <p className="mt-3 flex min-h-[20px] items-center gap-2 text-[13px] text-[var(--color-ink-muted)]">
+          <p className="mt-2 flex min-h-[18px] items-center gap-2 text-[12px] text-[var(--color-ink-muted)] sm:mt-3 sm:text-[13px]">
             {contentSearching ? (
               <>
                 <span className="min-w-0 truncate">
@@ -632,7 +636,7 @@ export default function FilesPage() {
           </p>
         )}
 
-        <div className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:px-5">
+        <div className="-mx-4 mt-3 border-y border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:mx-0 sm:mt-5 sm:rounded-lg sm:border sm:px-5">
           <AnimatePresence mode="wait" initial={false}>
             {isLoading ? (
               <motion.div
@@ -651,7 +655,7 @@ export default function FilesPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="flex flex-col items-center justify-center gap-2 py-20 text-center"
+                className="flex flex-col items-center justify-center gap-2 py-14 text-center sm:py-20"
               >
                 <AlertCircle className="h-6 w-6 text-[var(--color-danger)]" />
                 <p className="text-[14px] text-[var(--color-danger)]">
@@ -703,12 +707,12 @@ export default function FilesPage() {
           <Fab onClick={() => setFabOpen(true)} label="Add" icon={<Plus className="h-6 w-6" />} />
 
           {/* Persistent, bottom-anchored on every breakpoint — unlike Fab, which is mobile-only. */}
-          <div className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 right-24 z-40 flex items-center gap-2 sm:right-auto">
+          <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 right-20 z-40 flex items-center gap-2 sm:right-auto">
             <button
               type="button"
               onClick={() => navigate("/trash")}
               aria-label="Trash"
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-[13px] sm:px-4 font-medium text-[var(--color-ink-muted)] shadow-lg hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-[12px] font-medium text-[var(--color-ink-muted)] shadow-lg sm:px-4 sm:py-2.5 sm:text-[13px] hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
             >
               <Trash2 className="h-[14px] w-[14px]" />
               <span className="hidden sm:inline">Trash</span>
@@ -719,7 +723,7 @@ export default function FilesPage() {
                 type="button"
                 onClick={() => setModal({ type: "register-user" })}
                 aria-label="New user"
-                className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-[13px] sm:px-4 font-medium text-[var(--color-ink-muted)] shadow-lg hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-[12px] font-medium text-[var(--color-ink-muted)] shadow-lg sm:px-4 sm:py-2.5 sm:text-[13px] hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)]"
               >
                 <UserPlus className="h-[14px] w-[14px]" />
                 <span className="hidden sm:inline">New user</span>

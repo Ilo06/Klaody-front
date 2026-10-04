@@ -15,7 +15,7 @@ export default function Breadcrumbs({ path, onNavigate }: BreadcrumbsProps) {
       <button
         type="button"
         onClick={() => onNavigate(null)}
-        className="flex shrink-0 items-center gap-1.5 rounded px-1.5 py-1.5 hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)]"
+        className="flex shrink-0 items-center gap-1.5 rounded px-1.5 py-1 hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)] sm:py-1.5"
       >
         <Home className="h-[13px] w-[13px]" />
         Files
@@ -26,7 +26,7 @@ export default function Breadcrumbs({ path, onNavigate }: BreadcrumbsProps) {
           <button
             type="button"
             onClick={() => onNavigate(folder.id)}
-            className="max-w-[40vw] truncate rounded px-1.5 py-1.5 hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)] sm:max-w-[200px]"
+            className="max-w-[40vw] truncate rounded px-1.5 py-1 sm:py-1.5 hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)] sm:max-w-[200px]"
           >
             {folder.name}
           </button>

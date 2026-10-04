@@ -113,7 +113,7 @@ const UploadDropzone = forwardRef<UploadDropzoneHandle, UploadDropzoneProps>(fun
       </div>
 
       {uploads.length > 0 && (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-2 space-y-1.5 sm:mt-3 sm:space-y-2">
           <AnimatePresence initial={false}>
             {uploads.map((upload) => (
               <motion.li
@@ -123,7 +123,7 @@ const UploadDropzone = forwardRef<UploadDropzoneHandle, UploadDropzoneProps>(fun
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: 8, transition: { duration: 0.12 } }}
                 transition={{ duration: 0.18, ease: "easeOut" }}
-                className="flex items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2.5 text-[13px]"
+                className="flex items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[12px] sm:px-3.5 sm:py-2.5 sm:text-[13px]"
               >
               <FileIcon className="h-4 w-4 shrink-0 text-[var(--color-ink-muted)]" />
               <div className="min-w-0 flex-1">

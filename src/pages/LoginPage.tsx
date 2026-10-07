@@ -64,7 +64,7 @@ export default function LoginPage() {
           </span>
         </div>
 
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-7 sm:p-10">
+        <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-7 sm:p-10">
           <h1 className="text-[28px]">Sign in</h1>
           <p className="mt-2 text-[14px] text-[var(--color-ink-muted)]">Access your files</p>
 

@@ -287,7 +287,7 @@ export default function TrashPage() {
                   value={nameInput}
                   onChange={(event) => handleSearchChange(event.target.value)}
                   placeholder="Search trash"
-                  className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-9 pr-3 text-[16px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:py-2 sm:text-[13px]"
+                  className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] h-9 py-0 pl-8 pr-3 text-[16px] placeholder:text-[13px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:h-auto sm:py-2 sm:pl-9 sm:text-[13px]"
                 />
               </div>
               <select

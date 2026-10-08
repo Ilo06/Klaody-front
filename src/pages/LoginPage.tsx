@@ -7,6 +7,7 @@ import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { ApiError, login } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
+import Logo from "../components/Logo";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Enter your email").email("Enter a valid email address"),
@@ -59,9 +60,7 @@ export default function LoginPage() {
 
       <div className="w-full max-w-[400px]">
         <div className="mb-14 text-center">
-          <span className="font-[var(--font-serif)] text-[36px] font-bold tracking-tight text-[var(--color-ink)]" style={{ fontFamily: "var(--font-serif)" }}>
-            klaody
-          </span>
+          <Logo className="text-[36px]" />
         </div>
 
         <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-7 sm:p-10">

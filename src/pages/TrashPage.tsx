@@ -19,6 +19,7 @@ import {
 } from "../hooks/useTrash";
 import { fileIcon } from "../lib/fileIcon";
 import { formatBytes } from "../lib/format";
+import Logo from "../components/Logo";
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
@@ -174,9 +175,7 @@ export default function TrashPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
-        <span className="text-[20px] font-bold tracking-tight" style={{ fontFamily: "var(--font-serif)" }}>
-          klaody
-        </span>
+        <Logo className="text-[20px]" />
         <div className="flex items-center gap-4">
           <button
             type="button"

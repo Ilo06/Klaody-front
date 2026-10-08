@@ -58,6 +58,7 @@ import {
   useRenameFolder,
 } from "../hooks/useFileBrowser";
 import { useRegisterUser } from "../hooks/useUsers";
+import Logo from "../components/Logo";
 
 type ModalState =
   | { type: "new-folder" }
@@ -457,9 +458,7 @@ export default function FilesPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
-        <span className="text-[18px] font-bold tracking-tight sm:text-[20px]" style={{ fontFamily: "var(--font-serif)" }}>
-          klaody
-        </span>
+        <Logo className="text-[18px] sm:text-[20px]" />
         <div className="flex items-center gap-2 sm:gap-4">
           <button
             type="button"

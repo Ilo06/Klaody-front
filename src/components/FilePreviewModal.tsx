@@ -4,6 +4,7 @@ import { AlertCircle, Download, Loader2, MoreVertical, X } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
 import { ApiError, fetchFileBlob, fetchImagePreviewBlob, type FileMetadata } from "../lib/api";
 import { fileIcon } from "../lib/fileIcon";
+import PdfViewer from "./PdfViewer";
 
 const MAX_TEXT_PREVIEW_BYTES = 1_000_000;
 
@@ -13,11 +14,16 @@ const RESIZABLE_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/a
 const PREVIEW_WIDTHS = [480, 720, 1080, 1600];
 const DESKTOP_MODAL_WIDTH = 896; // sm:max-w-4xl
 
-/** Smallest bucket that still looks sharp in the modal on this screen (device pixel ratio capped at 2). */
+// Smallest bucket that still looks sharp in the modal on this screen (device pixel ratio capped at 2). */
 function previewWidth(): number {
   const cssWidth = Math.min(window.innerWidth, DESKTOP_MODAL_WIDTH);
   const pixels = Math.ceil(cssWidth * Math.min(window.devicePixelRatio || 1, 2));
   return PREVIEW_WIDTHS.find((width) => width >= pixels) ?? PREVIEW_WIDTHS[PREVIEW_WIDTHS.length - 1];
+}
+
+// Phones/tablets can't render a PDF inside an <iframe>, so they get the pdf.js viewer instead. */
+function needsPdfJs(): boolean {
+  return window.matchMedia("(pointer: coarse)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
 function isTextPreviewable(mimeType: string): boolean {
@@ -183,6 +189,7 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
                   url={state.url}
                   text={state.text}
                   tooLargeForText={state.tooLargeForText}
+                  onDownload={onDownload}
                 />
               </motion.div>
             )}
@@ -200,11 +207,13 @@ function PreviewContent({
   url,
   text,
   tooLargeForText,
+  onDownload,
 }: {
   file: FileMetadata;
   url: string;
   text?: string;
   tooLargeForText?: boolean;
+  onDownload: () => void;
 }) {
   const Icon = fileIcon(file.mimeType);
 
@@ -221,6 +230,7 @@ function PreviewContent({
   }
 
   if (file.mimeType === "application/pdf") {
+    if (needsPdfJs()) return <PdfViewer url={url} onDownload={onDownload} />;
     return (
       <iframe
         src={url}

@@ -1,13 +1,33 @@
 import { useStorageInfo } from "../hooks/useFileBrowser";
 import { formatBytes } from "../lib/format";
 
-export default function StorageIndicator() {
+export default function StorageIndicator({ variant = "pill" }: { variant?: "pill" | "panel" }) {
   const { data } = useStorageInfo();
   if (!data) return null;
 
   const usedBytes = Math.max(data.totalBytes - data.freeBytes, 0);
   const percentUsed = data.totalBytes > 0 ? Math.min(100, Math.round((usedBytes / data.totalBytes) * 100)) : 0;
   const usableLabel = `${data.usableGB.toFixed(data.usableGB < 10 ? 1 : 0)} GB`;
+
+  if (variant === "panel") {
+    return (
+      <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <div className="flex items-baseline justify-between text-[13px]">
+          <span className="font-medium text-[var(--color-ink)]">{usableLabel} free</span>
+          <span className="text-[var(--color-ink-muted)]">{percentUsed}% used</span>
+        </div>
+        <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[var(--color-border)]">
+          <div
+            className="h-full rounded-full bg-[var(--color-accent)] transition-[width]"
+            style={{ width: `${percentUsed}%` }}
+          />
+        </div>
+        <p className="mt-2 text-[12px] text-[var(--color-ink-muted)]">
+          {formatBytes(usedBytes)} of {formatBytes(data.totalBytes)}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div

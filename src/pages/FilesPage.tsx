@@ -8,6 +8,7 @@ import {
   CheckSquare,
   FolderPlus,
   LogOut,
+  Menu,
   Plus,
   Search,
   SlidersHorizontal,
@@ -59,6 +60,7 @@ import {
 } from "../hooks/useFileBrowser";
 import { useRegisterUser } from "../hooks/useUsers";
 import Logo from "../components/Logo";
+import MobileSidebar from "../components/MobileSidebar";
 
 type ModalState =
   | { type: "new-folder" }
@@ -163,6 +165,7 @@ export default function FilesPage() {
   const [shareResult, setShareResult] = useState<ShareResponse | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
@@ -458,7 +461,18 @@ export default function FilesPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
-        <Logo className="text-[18px] sm:text-[20px]" />
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+          aria-expanded={sidebarOpen}
+          className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:hidden"
+        >
+          <Menu className="h-[16px] w-[16px]" />
+        </button>
+        <div className="hidden sm:block">
+          <Logo className="text-[20px]" />
+        </div>
         <div className="flex items-center gap-2 sm:gap-4">
           <button
             type="button"
@@ -705,8 +719,8 @@ export default function FilesPage() {
         <>
           <Fab onClick={() => setFabOpen(true)} label="Add" icon={<Plus className="h-6 w-6" />} />
 
-          {/* Persistent, bottom-anchored on every breakpoint — unlike Fab, which is mobile-only. */}
-          <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 right-20 z-40 flex items-center gap-2 sm:right-auto">
+          {/* Desktop only — on mobile these live in the MobileSidebar. */}
+          <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 z-40 hidden items-center gap-2 sm:flex">
             <button
               type="button"
               onClick={() => navigate("/trash")}
@@ -731,6 +745,18 @@ export default function FilesPage() {
           </div>
         </>
       )}
+
+      <AnimatePresence>
+        {sidebarOpen && (
+          <MobileSidebar
+            key="mobile-sidebar"
+            isAdmin={isAdmin}
+            onClose={() => setSidebarOpen(false)}
+            onOpenTrash={() => navigate("/trash")}
+            onNewUser={() => setModal({ type: "register-user" })}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {fabOpen && (

@@ -18,9 +18,10 @@ import {
   UserPlus,
 } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle";
-import { SkeletonList } from "../components/Skeleton";
+import { SkeletonGrid, SkeletonList } from "../components/Skeleton";
 import Breadcrumbs from "../components/Breadcrumbs";
 import BrowserTable from "../components/BrowserTable";
+import SearchResultsGrid from "../components/SearchResultsGrid";
 import UploadDropzone, { type UploadDropzoneHandle } from "../components/UploadDropzone";
 import NameModal from "../components/NameModal";
 import MoveModal from "../components/MoveModal";
@@ -649,7 +650,13 @@ export default function FilesPage() {
           </p>
         )}
 
-        <div className="mt-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 sm:mt-5 sm:rounded-lg sm:px-5">
+        <div
+          className={
+            contentSearching
+              ? "mt-3 sm:mt-5"
+              : "mt-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 sm:mt-5 sm:rounded-lg sm:px-5"
+          }
+        >
           <AnimatePresence mode="wait" initial={false}>
             {isLoading ? (
               <motion.div
@@ -659,7 +666,7 @@ export default function FilesPage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
-                <SkeletonList />
+                {contentSearching ? <SkeletonGrid /> : <SkeletonList />}
               </motion.div>
             ) : loadError ? (
               <motion.div
@@ -683,32 +690,38 @@ export default function FilesPage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
-                <BrowserTable
-                  folders={visibleFolders}
-                  files={visibleFiles}
-                  onOpenFolder={(folder) => goToFolder(folder.id)}
-                  onRenameFolder={(folder) => setModal({ type: "rename-folder", folder })}
-                  onMoveFolder={(folder) => setModal({ type: "move-folder", folder })}
-                  onDeleteFolder={(folder) => setModal({ type: "delete-folder", folder })}
-                  onDownloadFile={handleDownload}
-                  onRenameFile={(file) => setModal({ type: "rename-file", file })}
-                  onMoveFile={(file) => setModal({ type: "move-file", file })}
-                  onDeleteFile={(file) => setModal({ type: "delete-file", file })}
-                  onShareFile={(file) => setModal({ type: "share-file", file })}
-                  selectionMode={selectionMode}
-                  selectedFileIds={selectedFileIds}
-                  selectedFolderIds={selectedFolderIds}
-                  onToggleFileSelected={toggleFileSelected}
-                  onToggleFolderSelected={toggleFolderSelected}
-                  emptyState={
-                    contentSearching
-                      ? {
-                          title: "No matching images",
-                          hint: "Try another word, or wait a few seconds if you just uploaded the image.",
-                        }
-                      : undefined
-                  }
-                />
+                {contentSearching ? (
+                  <SearchResultsGrid
+                    files={visibleFiles}
+                    onDownloadFile={handleDownload}
+                    onRenameFile={(file) => setModal({ type: "rename-file", file })}
+                    onMoveFile={(file) => setModal({ type: "move-file", file })}
+                    onDeleteFile={(file) => setModal({ type: "delete-file", file })}
+                    onShareFile={(file) => setModal({ type: "share-file", file })}
+                    selectionMode={selectionMode}
+                    selectedFileIds={selectedFileIds}
+                    onToggleFileSelected={toggleFileSelected}
+                  />
+                ) : (
+                  <BrowserTable
+                    folders={visibleFolders}
+                    files={visibleFiles}
+                    onOpenFolder={(folder) => goToFolder(folder.id)}
+                    onRenameFolder={(folder) => setModal({ type: "rename-folder", folder })}
+                    onMoveFolder={(folder) => setModal({ type: "move-folder", folder })}
+                    onDeleteFolder={(folder) => setModal({ type: "delete-folder", folder })}
+                    onDownloadFile={handleDownload}
+                    onRenameFile={(file) => setModal({ type: "rename-file", file })}
+                    onMoveFile={(file) => setModal({ type: "move-file", file })}
+                    onDeleteFile={(file) => setModal({ type: "delete-file", file })}
+                    onShareFile={(file) => setModal({ type: "share-file", file })}
+                    selectionMode={selectionMode}
+                    selectedFileIds={selectedFileIds}
+                    selectedFolderIds={selectedFolderIds}
+                    onToggleFileSelected={toggleFileSelected}
+                    onToggleFolderSelected={toggleFolderSelected}
+                  />
+                )}
               </motion.div>
             )}
           </AnimatePresence>

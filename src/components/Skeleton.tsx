@@ -1,3 +1,5 @@
+import { BENTO_GRID, bentoSpan } from "../lib/bento";
+
 /** Base skeleton block — a softly pulsing placeholder rectangle. */
 export function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-md bg-[var(--color-border)]/70 ${className}`} />;
@@ -24,6 +26,22 @@ export function SkeletonList({ rows = 6 }: { rows?: number }) {
         <div key={index} style={{ animationDelay: `${index * 60}ms` }}>
           <SkeletonRow />
         </div>
+      ))}
+    </div>
+  );
+}
+
+/** Placeholder for the bento image grid shown while a content search is running. */
+export function SkeletonGrid({ count = 9 }: { count?: number }) {
+  return (
+    <div className={BENTO_GRID} aria-hidden="true">
+      {Array.from({ length: count }).map((_, index) => (
+        // staggered so the tiles don't pulse in lockstep
+        <div
+          key={index}
+          className={`animate-pulse rounded-lg bg-[var(--color-border)]/70 ${bentoSpan(index)}`}
+          style={{ animationDelay: `${index * 60}ms` }}
+        />
       ))}
     </div>
   );

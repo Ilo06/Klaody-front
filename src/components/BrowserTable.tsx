@@ -52,7 +52,9 @@ export default function BrowserTable({
   emptyState = { title: "This folder is empty", hint: "Upload files or create a folder to get started." },
 }: BrowserTableProps) {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
-  const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
+  // Only the id is stored: the open file is looked up in `files`, so ←/→ can walk the list and the
+  // preview closes by itself if the file leaves it (deleted, moved...).
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   if (folders.length === 0 && files.length === 0) {
     return (
@@ -68,6 +70,9 @@ export default function BrowserTable({
       </motion.div>
     );
   }
+
+  const previewIndex = previewId === null ? -1 : files.findIndex((file) => file.id === previewId);
+  const previewFile = previewIndex >= 0 ? files[previewIndex] : null;
 
   // Small, capped stagger so long lists don't take forever to finish animating in.
   const rowDelay = (index: number) => Math.min(index, 10) * 0.025;
@@ -156,7 +161,7 @@ export default function BrowserTable({
               )}
               <button
                 type="button"
-                onClick={() => (selectionMode ? onToggleFileSelected?.(file) : setPreviewFile(file))}
+                onClick={() => (selectionMode ? onToggleFileSelected?.(file) : setPreviewId(file.id))}
                 aria-label={selectionMode ? `Select ${file.name}` : `Preview ${file.name}`}
                 className="flex min-w-0 flex-1 items-center gap-2.5 py-2 text-left sm:gap-3 sm:py-3.5"
               >
@@ -218,9 +223,12 @@ export default function BrowserTable({
           <FilePreviewModal
             key="preview"
             file={previewFile}
-            onClose={() => setPreviewFile(null)}
+            onClose={() => setPreviewId(null)}
             onDownload={() => onDownloadFile(previewFile)}
             actions={fileActions(previewFile).filter((action) => action.label !== "Download")}
+            position={{ index: previewIndex, total: files.length }}
+            onPrev={previewIndex > 0 ? () => setPreviewId(files[previewIndex - 1].id) : undefined}
+            onNext={previewIndex < files.length - 1 ? () => setPreviewId(files[previewIndex + 1].id) : undefined}
           />
         )}
       </AnimatePresence>

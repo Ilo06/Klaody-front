@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, Download, Loader2, MoreVertical, X } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Download, Loader2, MoreVertical, X } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
 import { ApiError, fetchFileBlob, fetchImagePreviewBlob, type FileMetadata } from "../lib/api";
 import { fileIcon } from "../lib/fileIcon";
@@ -33,10 +33,12 @@ function isTextPreviewable(mimeType: string): boolean {
   );
 }
 
+// `fileId` ties a result to the file it was loaded for, so that when the user navigates to another
+// file we never render the previous file's (already revoked) object URL for a frame.
 type PreviewState =
   | { status: "loading" }
-  | { status: "error"; message: string }
-  | { status: "ready"; url: string; text?: string; tooLargeForText?: boolean };
+  | { status: "error"; fileId: string; message: string }
+  | { status: "ready"; fileId: string; url: string; text?: string; tooLargeForText?: boolean };
 
 interface FilePreviewModalProps {
   file: FileMetadata;
@@ -44,11 +46,68 @@ interface FilePreviewModalProps {
   onDownload: () => void;
   /** Row actions minus "Download" — that's already a dedicated header button here. */
   actions: ActionSheetItem[];
+  /** Where this file sits in the list being browsed, shown as "3 / 12" in the header. */
+  position?: { index: number; total: number };
+  /** Go to the previous / next file. Leave undefined when there is none (start / end of the list). */
+  onPrev?: () => void;
+  onNext?: () => void;
 }
 
-export default function FilePreviewModal({ file, onClose, onDownload, actions }: FilePreviewModalProps) {
+// Horizontal swipe needed to change file, and how much more horizontal than vertical it must be.
+const SWIPE_MIN_DISTANCE = 60;
+const SWIPE_DIRECTION_RATIO = 1.5;
+
+export default function FilePreviewModal({
+  file,
+  onClose,
+  onDownload,
+  actions,
+  position,
+  onPrev,
+  onNext,
+}: FilePreviewModalProps) {
   const [state, setState] = useState<PreviewState>({ status: "loading" });
   const [sheetOpen, setSheetOpen] = useState(false);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+
+  // Keyboard: ← / → to browse, Esc to close. Left alone while the actions sheet is open
+  // or while focus is on a control that uses the arrow keys itself (video/audio seek, inputs).
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (sheetOpen || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && ["INPUT", "TEXTAREA", "SELECT", "VIDEO", "AUDIO"].includes(target.tagName)) return;
+
+      if (event.key === "ArrowLeft" && onPrev) {
+        event.preventDefault();
+        onPrev();
+      } else if (event.key === "ArrowRight" && onNext) {
+        event.preventDefault();
+        onNext();
+      } else if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sheetOpen, onPrev, onNext, onClose]);
+
+  const handleTouchStart = (event: TouchEvent) => {
+    const touch = event.touches[0];
+    touchStart.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+  };
+
+  const handleTouchEnd = (event: TouchEvent) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < SWIPE_MIN_DISTANCE || Math.abs(dx) < Math.abs(dy) * SWIPE_DIRECTION_RATIO) return;
+    if (dx > 0) onPrev?.();
+    else onNext?.();
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -68,20 +127,21 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
 
         if (isTextPreviewable(file.mimeType)) {
           if (blob.size > MAX_TEXT_PREVIEW_BYTES) {
-            setState({ status: "ready", url: objectUrl, tooLargeForText: true });
+            setState({ status: "ready", fileId: file.id, url: objectUrl, tooLargeForText: true });
             return;
           }
           const text = await blob.text();
-          if (!cancelled) setState({ status: "ready", url: objectUrl, text });
+          if (!cancelled) setState({ status: "ready", fileId: file.id, url: objectUrl, text });
           return;
         }
 
-        setState({ status: "ready", url: objectUrl });
+        setState({ status: "ready", fileId: file.id, url: objectUrl });
       })
       .catch((err: unknown) => {
         if (!cancelled) {
           setState({
             status: "error",
+            fileId: file.id,
             message: err instanceof ApiError ? err.message : "Could not load the preview",
           });
         }
@@ -94,6 +154,8 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
   }, [file.id, file.mimeType]);
 
   const Icon = fileIcon(file.mimeType);
+  // A result that belongs to a previous file counts as "still loading" for the current one.
+  const view: PreviewState = state.status !== "loading" && state.fileId !== file.id ? { status: "loading" } : state;
 
   return (
     <motion.div
@@ -114,6 +176,11 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
           <div className="flex min-w-0 items-center gap-2.5">
             <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--color-ink-muted)]" />
             <span className="truncate text-[14px] sm:text-[15px]">{file.name}</span>
+            {position && position.total > 1 && (
+              <span className="shrink-0 text-[12px] tabular-nums text-[var(--color-ink-muted)]">
+                {position.index + 1} / {position.total}
+              </span>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-1">
             <button
@@ -148,9 +215,14 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
           </div>
         </header>
 
-        <div className="flex flex-1 items-center justify-center overflow-auto bg-[var(--color-bg)] p-2 sm:p-4">
+        <div className="relative flex min-h-0 flex-1 bg-[var(--color-bg)]">
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="flex min-w-0 flex-1 items-center justify-center overflow-auto p-2 sm:p-4"
+        >
           <AnimatePresence mode="wait" initial={false}>
-            {state.status === "loading" && (
+            {view.status === "loading" && (
               <motion.div
                 key="loading"
                 initial={{ opacity: 0 }}
@@ -162,7 +234,7 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
               </motion.div>
             )}
 
-            {state.status === "error" && (
+            {view.status === "error" && (
               <motion.div
                 key="error"
                 initial={{ opacity: 0 }}
@@ -172,11 +244,11 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
                 className="flex flex-col items-center gap-2 text-center"
               >
                 <AlertCircle className="h-6 w-6 text-[var(--color-danger)]" />
-                <p className="text-[14px] text-[var(--color-danger)]">{state.message}</p>
+                <p className="text-[14px] text-[var(--color-danger)]">{view.message}</p>
               </motion.div>
             )}
 
-            {state.status === "ready" && (
+            {view.status === "ready" && (
               <motion.div
                 key="ready"
                 initial={{ opacity: 0 }}
@@ -186,14 +258,39 @@ export default function FilePreviewModal({ file, onClose, onDownload, actions }:
               >
                 <PreviewContent
                   file={file}
-                  url={state.url}
-                  text={state.text}
-                  tooLargeForText={state.tooLargeForText}
+                  url={view.url}
+                  text={view.text}
+                  tooLargeForText={view.tooLargeForText}
                   onDownload={onDownload}
                 />
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Arrows: desktop only (touch users swipe). They sit over the content edges. */}
+        {onPrev && (
+          <button
+            type="button"
+            onClick={onPrev}
+            aria-label="Previous file"
+            title="Previous (←)"
+            className="absolute left-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/90 text-[var(--color-ink-muted)] shadow-md backdrop-blur transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:flex"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        {onNext && (
+          <button
+            type="button"
+            onClick={onNext}
+            aria-label="Next file"
+            title="Next (→)"
+            className="absolute right-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/90 text-[var(--color-ink-muted)] shadow-md backdrop-blur transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:flex"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
         </div>
       </motion.div>
 

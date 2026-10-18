@@ -168,7 +168,9 @@ export default function SearchResultsGrid({
   selectedFileIds,
   onToggleFileSelected,
 }: SearchResultsGridProps) {
-  const [previewFile, setPreviewFile] = useState<FileMetadata | null>(null);
+  // Only the id is stored: the open file is looked up in `files` so ←/→ can walk the results
+  // (best match first) and the preview closes by itself if the file leaves the list.
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const [sheetFile, setSheetFile] = useState<FileMetadata | null>(null);
 
   if (files.length === 0) {
@@ -188,6 +190,9 @@ export default function SearchResultsGrid({
     );
   }
 
+  const previewIndex = previewId === null ? -1 : files.findIndex((file) => file.id === previewId);
+  const previewFile = previewIndex >= 0 ? files[previewIndex] : null;
+
   const fileActions = (file: FileMetadata): ActionSheetItem[] => [
     { label: "Download", icon: Download, onClick: () => onDownloadFile(file) },
     { label: "Share", icon: Link2, onClick: () => onShareFile(file) },
@@ -206,7 +211,7 @@ export default function SearchResultsGrid({
             index={index}
             selectionMode={selectionMode}
             selected={selectedFileIds?.has(file.id) ?? false}
-            onOpen={() => (selectionMode ? onToggleFileSelected?.(file) : setPreviewFile(file))}
+            onOpen={() => (selectionMode ? onToggleFileSelected?.(file) : setPreviewId(file.id))}
             onMenu={() => setSheetFile(file)}
           />
         ))}
@@ -228,9 +233,12 @@ export default function SearchResultsGrid({
           <FilePreviewModal
             key="preview"
             file={previewFile}
-            onClose={() => setPreviewFile(null)}
+            onClose={() => setPreviewId(null)}
             onDownload={() => onDownloadFile(previewFile)}
             actions={fileActions(previewFile).filter((action) => action.label !== "Download")}
+            position={{ index: previewIndex, total: files.length }}
+            onPrev={previewIndex > 0 ? () => setPreviewId(files[previewIndex - 1].id) : undefined}
+            onNext={previewIndex < files.length - 1 ? () => setPreviewId(files[previewIndex + 1].id) : undefined}
           />
         )}
       </AnimatePresence>

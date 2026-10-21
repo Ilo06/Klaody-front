@@ -12,6 +12,9 @@ import { formatBytes } from "../lib/format";
 const THUMB_WIDTH = 240;
 const HERO_THUMB_WIDTH = 480;
 
+// How long an unused thumbnail stays in the react-query cache (3 days).
+const THUMBNAIL_CACHE_MS = 3 * 24 * 60 * 60 * 1000;
+
 interface SearchResultsGridProps {
   files: FileMetadata[];
   onDownloadFile: (file: FileMetadata) => void;
@@ -56,7 +59,7 @@ function useThumbnail(file: FileMetadata, width: number, enabled: boolean) {
     queryFn: () => fetchImagePreviewBlob(file.id, width).catch(() => fetchFileBlob(file.id)),
     enabled,
     staleTime: Infinity,
-    gcTime: 10 * 60_000,
+    gcTime: THUMBNAIL_CACHE_MS,
     retry: false,
   });
   const [url, setUrl] = useState<string | null>(null);

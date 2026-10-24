@@ -12,8 +12,8 @@ import { formatBytes } from "../lib/format";
 const THUMB_WIDTH = 240;
 const HERO_THUMB_WIDTH = 480;
 
-// How long an unused thumbnail stays in the react-query cache (3 days).
-const THUMBNAIL_CACHE_MS = 3 * 24 * 60 * 60 * 1000;
+// How long an unused thumbnail stays in the react-query cache (30 days).
+const THUMBNAIL_CACHE_MS = 3 * 24 * 60 * 60 * 1000 * 10;
 
 interface SearchResultsGridProps {
   files: FileMetadata[];

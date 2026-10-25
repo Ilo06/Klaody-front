@@ -210,11 +210,29 @@ export async function searchImages(q: string, options: SearchImagesOptions = {})
   return data;
 }
 
+/** Files larger than this are sent with the resumable chunked protocol instead of one multipart request. */
+export const CHUNKED_UPLOAD_THRESHOLD = 200 * 1024 * 1024; // 200 MB
+const MAX_PARALLEL_CHUNKS = 3;
+const MAX_CHUNK_RETRIES = 3;
+
+interface UploadSessionInfo {
+  uploadId: string;
+  chunkSize: number;
+  totalChunks: number;
+  receivedChunks: number[];
+}
+
+type UploadOptions = { signal?: AbortSignal; onProgress?: (percent: number) => void };
+
 export async function uploadFile(
   file: File,
   folderId: string | null,
-  options: { signal?: AbortSignal; onProgress?: (percent: number) => void } = {},
+  options: UploadOptions = {},
 ): Promise<FileUploadResponse> {
+  if (file.size > CHUNKED_UPLOAD_THRESHOLD) {
+    return uploadFileChunked(file, folderId, options);
+  }
+
   const formData = new FormData();
   formData.append("file", file);
   if (folderId !== null) formData.append("folderId", String(folderId));
@@ -228,6 +246,135 @@ export async function uploadFile(
     },
   });
   return data;
+}
+
+// Remembers the server-side session of an interrupted upload so the same file can resume.
+function resumeKey(file: File, folderId: string | null): string {
+  return `klaody.upload.${folderId ?? "root"}.${file.name}.${file.size}.${file.lastModified}`;
+}
+
+function readResumeId(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeResumeId(key: string, id: string | null) {
+  try {
+    if (id === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, id);
+  } catch {
+    // Storage unavailable: the upload still works, it just can't be resumed after a reload.
+  }
+}
+
+async function uploadFileChunked(
+  file: File,
+  folderId: string | null,
+  { signal, onProgress }: UploadOptions,
+): Promise<FileUploadResponse> {
+  const key = resumeKey(file, folderId);
+
+  // 1) Resume a previous session if the server still knows it, otherwise start a new one.
+  let session: UploadSessionInfo | null = null;
+  const savedId = readResumeId(key);
+  if (savedId) {
+    try {
+      const { data } = await apiClient.get<UploadSessionInfo>(`/files/uploads/${savedId}`, { signal });
+      session = data;
+    } catch (error) {
+      if (axios.isCancel(error)) throw error;
+      writeResumeId(key, null); // expired or deleted: start over
+    }
+  }
+  if (!session) {
+    const { data } = await apiClient.post<UploadSessionInfo>(
+      "/files/uploads",
+      { name: file.name, size: file.size, mimeType: file.type || undefined, folderId },
+      { signal },
+    );
+    session = data;
+    writeResumeId(key, session.uploadId);
+  }
+
+  const { uploadId, chunkSize, totalChunks } = session;
+  const chunkBytes = (index: number) => Math.min(chunkSize, file.size - index * chunkSize);
+
+  // 2) Progress: bytes confirmed + bytes in flight, capped at 99 until the server assembled the file.
+  const loaded = new Array<number>(totalChunks).fill(0);
+  for (const index of session.receivedChunks) loaded[index] = chunkBytes(index);
+  const report = () => {
+    if (!onProgress) return;
+    const sent = loaded.reduce((a, b) => a + b, 0);
+    onProgress(Math.min(99, Math.floor((sent / file.size) * 100)));
+  };
+  report();
+
+  const received = new Set(session.receivedChunks);
+  const pending: number[] = [];
+  for (let i = 0; i < totalChunks; i++) if (!received.has(i)) pending.push(i);
+
+  const sendChunk = async (index: number) => {
+    const start = index * chunkSize;
+    const blob = file.slice(start, start + chunkBytes(index));
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await apiClient.put(`/files/uploads/${uploadId}/chunks/${index}`, blob, {
+          signal,
+          headers: { "Content-Type": "application/octet-stream" },
+          onUploadProgress: (event: AxiosProgressEvent) => {
+            loaded[index] = Math.min(event.loaded, blob.size);
+            report();
+          },
+        });
+        loaded[index] = blob.size;
+        report();
+        return;
+      } catch (error) {
+        loaded[index] = 0;
+        report();
+        if (axios.isCancel(error)) throw error;
+        const status = error instanceof ApiError ? error.status : 0;
+        const retryable = status === 0 || status >= 500;
+        if (!retryable || attempt >= MAX_CHUNK_RETRIES) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
+      }
+    }
+  };
+
+  try {
+    // 3) Small worker pool over the missing chunks.
+    let failure: unknown = null;
+    const worker = async () => {
+      while (failure === null) {
+        const index = pending.shift();
+        if (index === undefined) return;
+        try {
+          await sendChunk(index);
+        } catch (error) {
+          failure = error;
+          return;
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(MAX_PARALLEL_CHUNKS, pending.length) }, worker));
+    if (failure !== null) throw failure;
+
+    // 4) Ask the server to assemble the file.
+    const { data } = await apiClient.post<FileUploadResponse>(`/files/uploads/${uploadId}/complete`, null, { signal });
+    writeResumeId(key, null);
+    onProgress?.(100);
+    return data;
+  } catch (error) {
+    if (axios.isCancel(error)) {
+      // Deliberate cancel: drop the server session. Other failures keep it so a retry resumes.
+      writeResumeId(key, null);
+      await apiClient.delete(`/files/uploads/${uploadId}`).catch(() => undefined);
+    }
+    throw error;
+  }
 }
 
 async function fetchFileResponse(id: string) {

@@ -180,7 +180,7 @@ export default function FilePreviewModal({
         className="flex h-full w-full flex-col overflow-hidden sm:h-[85vh] sm:max-h-[85vh] sm:w-[90vw] sm:max-w-4xl sm:rounded-xl sm:border sm:border-[var(--color-border)] sm:bg-[var(--color-surface)] sm:shadow-2xl"
       >
         <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-4 sm:pb-3 sm:pt-4">
-          <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
             <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--color-ink-muted)]" />
             <span className="truncate text-[14px] sm:text-[15px]">{file.name}</span>
             {position && position.total > 1 && (
@@ -189,7 +189,7 @@ export default function FilePreviewModal({
               </span>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="relative z-10 flex shrink-0 items-center gap-0.5 bg-[var(--color-surface)] sm:gap-1">
             {isImage && (
               <button
                 type="button"

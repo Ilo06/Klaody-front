@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ChevronLeft, ChevronRight, Download, Loader2, MoreVertical, X } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Download, Info, Loader2, MoreVertical, X } from "lucide-react";
 import ActionSheet, { type ActionSheetItem } from "./ActionSheet";
 import { ApiError, fetchFileBlob, fetchImagePreviewBlob, type FileMetadata } from "../lib/api";
 import { fileIcon } from "../lib/fileIcon";
 import PdfViewer from "./PdfViewer";
+import FileDetailsPanel from "./FileDetailsPanel";
 
 const MAX_TEXT_PREVIEW_BYTES = 1_000_000;
 
@@ -68,6 +69,10 @@ export default function FilePreviewModal({
 }: FilePreviewModalProps) {
   const [state, setState] = useState<PreviewState>({ status: "loading" });
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Stays open while browsing from one image to the next.
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const isImage = file.mimeType.startsWith("image/");
+  const showDetails = isImage && detailsOpen;
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   // Keyboard: ← / → to browse, Esc to close. Left alone while the actions sheet is open
@@ -86,11 +91,13 @@ export default function FilePreviewModal({
         onNext();
       } else if (event.key === "Escape") {
         onClose();
+      } else if ((event.key === "i" || event.key === "I") && isImage) {
+        setDetailsOpen((open) => !open);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [sheetOpen, onPrev, onNext, onClose]);
+  }, [sheetOpen, isImage, onPrev, onNext, onClose]);
 
   const handleTouchStart = (event: TouchEvent) => {
     const touch = event.touches[0];
@@ -183,6 +190,20 @@ export default function FilePreviewModal({
             )}
           </div>
           <div className="flex shrink-0 items-center gap-1">
+            {isImage && (
+              <button
+                type="button"
+                onClick={() => setDetailsOpen((open) => !open)}
+                aria-label="Details"
+                aria-pressed={showDetails}
+                title="Details (i)"
+                className={`rounded-full p-2 sm:p-2.5 hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)] ${
+                  showDetails ? "bg-[var(--color-border)]/60 text-[var(--color-ink)]" : "text-[var(--color-ink-muted)]"
+                }`}
+              >
+                <Info className="h-[18px] w-[18px]" />
+              </button>
+            )}
             <button
               type="button"
               onClick={onDownload}
@@ -286,11 +307,12 @@ export default function FilePreviewModal({
             onClick={onNext}
             aria-label="Next file"
             title="Next (→)"
-            className="absolute right-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/90 text-[var(--color-ink-muted)] shadow-md backdrop-blur transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:flex"
+            className={`absolute right-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/90 text-[var(--color-ink-muted)] shadow-md backdrop-blur transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:flex ${showDetails ? "sm:right-[calc(18rem+0.75rem)]" : ""}`}
           >
             <ChevronRight className="h-5 w-5" />
           </button>
         )}
+        {showDetails && <FileDetailsPanel file={file} onClose={() => setDetailsOpen(false)} />}
         </div>
       </motion.div>
 

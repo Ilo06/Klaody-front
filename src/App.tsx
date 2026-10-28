@@ -1,4 +1,7 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
 import LoginPage from "./pages/LoginPage";
 import FilesPage from "./pages/FilesPage";
 import TrashPage from "./pages/TrashPage";
@@ -9,8 +12,31 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
+/** Android app only: the hardware back button goes back, and quits the app from the root screens. */
+function useAndroidBackButton() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handle = CapApp.addListener("backButton", () => {
+      if (location.pathname === "/files" || location.pathname === "/login") {
+        void CapApp.exitApp();
+      } else {
+        navigate(-1);
+      }
+    });
+
+    return () => {
+      void handle.then((h) => h.remove());
+    };
+  }, [navigate, location.pathname]);
+}
+
 function App() {
   const { isAuthenticated } = useAuth();
+  useAndroidBackButton();
 
   return (
     <Routes>

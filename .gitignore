@@ -28,3 +28,8 @@ dist-ssr
 .env
 .env.example
 repomix-output.xml
+
+android/app/build
+android/.gradle
+android/build
+android/local.properties

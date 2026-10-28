@@ -1,4 +1,7 @@
 import axios, { type AxiosProgressEvent } from "axios";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
@@ -402,7 +405,7 @@ export async function fetchImagePreviewBlob(id: string, width: number): Promise<
 export async function downloadFile(id: string, fallbackName: string): Promise<void> {
   const response = await fetchFileResponse(id);
   const filename = parseFilenameFromDisposition(response.headers["content-disposition"]) ?? fallbackName;
-  triggerBrowserDownload(response.data, filename);
+  await triggerBrowserDownload(response.data, filename);
 }
 
 export async function renameFile(id: string, name: string): Promise<FileMetadata> {
@@ -559,7 +562,33 @@ function parseFilenameFromDisposition(disposition?: string): string | null {
   return bareMatch ? bareMatch[1].trim() : null;
 }
 
-function triggerBrowserDownload(blob: Blob, filename: string): void {
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve((reader.result as string).split(",")[1] ?? "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+/**
+ * Web: classic <a download> click.
+ * Native app (Capacitor): the WebView can't save blobs that way, so the file is written to the app
+ * cache and handed to the Android share sheet (the user picks "Save to…" or another app).
+ */
+async function triggerBrowserDownload(blob: Blob, filename: string): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    const safeName = filename.replace(/[\\/:*?"<>|]/g, "_");
+    const data = await blobToBase64(blob);
+    const saved = await Filesystem.writeFile({
+      path: safeName,
+      data,
+      directory: Directory.Cache,
+    });
+    await Share.share({ title: safeName, url: saved.uri });
+    return;
+  }
+
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

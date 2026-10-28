@@ -21,6 +21,8 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - run: npm ci --include=dev
+
       - name: Build web app
         run: npm run build
         env:

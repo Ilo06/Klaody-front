@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">klaody</string>
+    <string name="title_activity_main">klaody</string>
+    <string name="package_name">com.ilo.klaody</string>
+    <string name="custom_url_scheme">com.ilo.klaody</string>
+</resources>

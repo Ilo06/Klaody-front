@@ -151,23 +151,23 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-                                    (error) => {
-                                      // Let cancelled requests (e.g. an aborted upload) pass through unchanged
-                                      // so callers can tell a deliberate cancel apart from a real failure.
-                                      if (axios.isCancel(error)) {
-                                        return Promise.reject(error);
-                                      }
+  (error) => {
+    // Let cancelled requests (e.g. an aborted upload) pass through unchanged
+    // so callers can tell a deliberate cancel apart from a real failure.
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
 
-                                      const status = error.response?.status ?? 0;
-                                      if (status === 401) {
-                                        window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
-                                      }
+    const status = error.response?.status ?? 0;
+    if (status === 401) {
+      window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+    }
 
-                                      const message =
-                                      (error.response?.data as { error?: string } | undefined)?.error ??
-                                      (status === 0 ? "Could not reach the server" : "Something went wrong");
-                                      return Promise.reject(new ApiError(status, message));
-                                    },
+    const message =
+      (error.response?.data as { error?: string } | undefined)?.error ??
+      (status === 0 ? "Could not reach the server" : "Something went wrong");
+    return Promise.reject(new ApiError(status, message));
+  },
 );
 
 export function isCancelledUpload(error: unknown): boolean {

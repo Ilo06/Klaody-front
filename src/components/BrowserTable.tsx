@@ -64,8 +64,10 @@ export default function BrowserTable({
         transition={{ duration: 0.2 }}
         className="flex flex-col items-center justify-center px-4 py-16 text-center sm:py-24"
       >
-        <Folder className="h-8 w-8 text-[var(--color-ink-muted)]" />
-        <h2 className="mt-4 text-[18px]">{emptyState.title}</h2>
+        <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent sm:text-[var(--color-ink-muted)]">
+          <Folder className="h-7 w-7 sm:h-8 sm:w-8" />
+        </span>
+        <h2 className="mt-5 text-[18px] sm:mt-4">{emptyState.title}</h2>
         <p className="mt-1.5 text-[14px] text-[var(--color-ink-muted)]">{emptyState.hint}</p>
       </motion.div>
     );
@@ -102,7 +104,7 @@ export default function BrowserTable({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18, delay: rowDelay(index), ease: "easeOut" }}
-              className="flex items-center gap-1 border-b border-[var(--color-border)] transition-colors last:border-0 hover:bg-[var(--color-border)]/30"
+              className="flex items-center gap-1 border-b border-[var(--color-border)] px-2 transition-colors last:border-0 active:bg-[var(--color-border)]/30 sm:px-0 sm:hover:bg-[var(--color-border)]/30"
             >
               {selectionMode && (
                 <input
@@ -110,17 +112,19 @@ export default function BrowserTable({
                   checked={isSelected}
                   onChange={() => onToggleFolderSelected?.(folder)}
                   aria-label={`Select ${folder.name}`}
-                  className="ml-0.5 mr-2.5 h-4 w-4 shrink-0 sm:ml-1 sm:mr-3 accent-[var(--color-accent)]"
+                  className="mr-3 h-[18px] w-[18px] shrink-0 sm:ml-1 sm:mr-3 sm:h-4 sm:w-4 accent-[var(--color-accent)]"
                 />
               )}
               <button
                 type="button"
                 onClick={() => (selectionMode ? onToggleFolderSelected?.(folder) : onOpenFolder(folder))}
-                className="flex min-w-0 flex-1 items-center gap-2.5 py-2 text-left sm:gap-3 sm:py-3.5"
+                className="flex min-w-0 flex-1 items-center gap-3 py-2.5 text-left sm:gap-3 sm:py-3.5"
               >
-                <Folder className="h-4 w-4 shrink-0 sm:h-5 sm:w-5 text-[var(--color-ink-muted)]" />
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent sm:text-[var(--color-ink-muted)]">
+                  <Folder className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+                </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] sm:text-[15px]">{folder.name}</span>
+                  <span className="block truncate text-[14px] font-medium sm:text-[15px] sm:font-normal">{folder.name}</span>
                   <span className="block truncate text-[11px] text-[var(--color-ink-muted)] sm:text-[12px]">
                     Created {format(new Date(folder.createdAt), "MMM d, yyyy")}
                   </span>
@@ -131,9 +135,9 @@ export default function BrowserTable({
                   type="button"
                   onClick={() => setActiveSheet({ kind: "folder", folder })}
                   aria-label={`More actions for ${folder.name}`}
-                  className="shrink-0 rounded-full p-1.5 text-[var(--color-ink-muted)] sm:p-2.5 hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-muted)] active:bg-[var(--color-border)]/60 sm:h-auto sm:w-auto sm:p-2.5 sm:hover:bg-[var(--color-border)]/60 sm:hover:text-[var(--color-ink)]"
                 >
-                  <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <MoreVertical className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
                 </button>
               )}
             </motion.li>
@@ -148,7 +152,7 @@ export default function BrowserTable({
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18, delay: rowDelay(folders.length + index), ease: "easeOut" }}
-              className="flex items-center gap-1 border-b border-[var(--color-border)] transition-colors last:border-0 hover:bg-[var(--color-border)]/30"
+              className="flex items-center gap-1 border-b border-[var(--color-border)] px-2 transition-colors last:border-0 active:bg-[var(--color-border)]/30 sm:px-0 sm:hover:bg-[var(--color-border)]/30"
             >
               {selectionMode && (
                 <input
@@ -156,18 +160,20 @@ export default function BrowserTable({
                   checked={isSelected}
                   onChange={() => onToggleFileSelected?.(file)}
                   aria-label={`Select ${file.name}`}
-                  className="ml-0.5 mr-2.5 h-4 w-4 shrink-0 sm:ml-1 sm:mr-3 accent-[var(--color-accent)]"
+                  className="mr-3 h-[18px] w-[18px] shrink-0 sm:ml-1 sm:mr-3 sm:h-4 sm:w-4 accent-[var(--color-accent)]"
                 />
               )}
               <button
                 type="button"
                 onClick={() => (selectionMode ? onToggleFileSelected?.(file) : setPreviewId(file.id))}
                 aria-label={selectionMode ? `Select ${file.name}` : `Preview ${file.name}`}
-                className="flex min-w-0 flex-1 items-center gap-2.5 py-2 text-left sm:gap-3 sm:py-3.5"
+                className="flex min-w-0 flex-1 items-center gap-3 py-2.5 text-left sm:gap-3 sm:py-3.5"
               >
-                <Icon className="h-4 w-4 shrink-0 sm:h-5 sm:w-5 text-[var(--color-ink-muted)]" />
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-border)]/50 text-[var(--color-ink-muted)] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent">
+                  <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+                </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] sm:text-[15px]">{file.name}</span>
+                  <span className="block truncate text-[14px] font-medium sm:text-[15px] sm:font-normal">{file.name}</span>
                   <span className="block truncate text-[11px] text-[var(--color-ink-muted)] sm:text-[12px]">
                     {formatBytes(file.size)} · {format(new Date(file.uploadedAt), "MMM d, yyyy")}
                     {file.indexStatus === "PENDING" && (
@@ -189,9 +195,9 @@ export default function BrowserTable({
                   type="button"
                   onClick={() => setActiveSheet({ kind: "file", file })}
                   aria-label={`More actions for ${file.name}`}
-                  className="shrink-0 rounded-full p-1.5 text-[var(--color-ink-muted)] sm:p-2.5 hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)]"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-muted)] active:bg-[var(--color-border)]/60 sm:h-auto sm:w-auto sm:p-2.5 sm:hover:bg-[var(--color-border)]/60 sm:hover:text-[var(--color-ink)]"
                 >
-                  <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <MoreVertical className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
                 </button>
               )}
             </motion.li>

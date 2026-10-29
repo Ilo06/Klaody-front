@@ -467,10 +467,11 @@ export default function FilesPage() {
           onClick={() => setSidebarOpen(true)}
           aria-label="Open menu"
           aria-expanded={sidebarOpen}
-          className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:hidden"
+          className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:hidden"
         >
           <Menu className="h-[16px] w-[16px]" />
         </button>
+        <Logo className="text-[19px] sm:hidden" />
         <div className="hidden sm:block">
           <Logo className="text-[20px]" />
         </div>
@@ -480,7 +481,7 @@ export default function FilesPage() {
             onClick={() => clearSession()}
             aria-label="Sign out"
             title="Sign out"
-            className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 text-[13px] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:h-auto sm:px-4 sm:py-1.5"
+            className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-0 text-[13px] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:h-auto sm:w-auto sm:rounded-md sm:px-4 sm:py-1.5"
           >
             <LogOut className="h-[14px] w-[14px] sm:hidden" />
             <span className="hidden sm:inline">Sign out</span>
@@ -523,7 +524,7 @@ export default function FilesPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 sm:mt-6 sm:gap-3 sm:px-4 sm:py-2.5"
+              className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2 sm:mt-6 sm:gap-3 sm:rounded-md sm:px-4 sm:py-2.5"
             >
               <div className="flex items-center gap-3">
                 <button
@@ -564,13 +565,13 @@ export default function FilesPage() {
               className="mt-3 flex flex-wrap items-center gap-2 sm:mt-6 sm:gap-3"
             >
               <div className="relative min-w-[160px] flex-1">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-[14px] w-[14px] sm:left-3 -translate-y-1/2 text-[var(--color-ink-muted)]" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
                 <input
                   type="text"
                   value={searchInput}
                   onChange={(event) => handleSearchChange(event.target.value)}
                   placeholder={contentMode ? "Describe the image, e.g. car" : "Search by name"}
-                  className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] h-9 py-0 pl-8 pr-3 text-[13px] placeholder:text-[13px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:h-auto sm:py-2 sm:pl-9 sm:text-[12px]"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] h-10 py-0 pl-9 pr-3 text-[13px] placeholder:text-[13px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:h-auto sm:rounded-md sm:py-2 sm:pl-9 sm:text-[12px]"
                 />
               </div>
 
@@ -580,7 +581,7 @@ export default function FilesPage() {
                 aria-pressed={contentMode}
                 aria-label="Search by image content"
                 title={contentMode ? "Searching by image content — click to search by name" : "Search by image content"}
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border sm:h-9 sm:w-9 sm:rounded-md ${
                   contentMode
                     ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
                     : "border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)]"
@@ -593,7 +594,7 @@ export default function FilesPage() {
                 type="button"
                 onClick={() => setFiltersOpen(true)}
                 aria-label="Filters"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] sm:hidden"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] sm:hidden"
               >
                 <SlidersHorizontal className="h-[16px] w-[16px]" />
               </button>
@@ -615,7 +616,7 @@ export default function FilesPage() {
                 disabled={visibleFolders.length + visibleFiles.length === 0}
                 aria-label="Select items"
                 title="Select"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:w-9 sm:rounded-md sm:bg-transparent"
               >
                 <CheckSquare className="h-[14px] w-[14px]" />
               </button>
@@ -654,7 +655,7 @@ export default function FilesPage() {
           className={
             contentSearching
               ? "mt-3 sm:mt-5"
-              : "mt-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 sm:mt-5 sm:rounded-lg sm:px-5"
+              : "mt-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-1 shadow-[0_1px_2px_rgba(40,52,78,0.05)] sm:mt-5 sm:rounded-lg sm:px-5 sm:shadow-none"
           }
         >
           <AnimatePresence mode="wait" initial={false}>

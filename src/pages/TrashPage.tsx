@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ArrowLeft, CheckSquare, Folder, Loader2, RotateCcw, Search, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckSquare, Folder, Loader2, LogOut, RotateCcw, Search, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import ThemeToggle from "../components/ThemeToggle";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -174,39 +174,48 @@ export default function TrashPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
-        <Logo className="text-[20px]" />
-        <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
+        <button
+          type="button"
+          onClick={() => navigate("/files")}
+          aria-label="Back to files"
+          className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:hidden"
+        >
+          <ArrowLeft className="h-[16px] w-[16px]" />
+        </button>
+        <Logo className="text-[19px] sm:text-[20px]" />
+        <div className="flex items-center gap-2 sm:gap-4">
           <button
             type="button"
             onClick={() => clearSession()}
-            className="text-[13px] text-[var(--color-ink-muted)] inline-flex px-4 py-1.5 cursor-pointer items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] hover:text-[var(--color-ink)]"
+            className="text-[13px] text-[var(--color-ink-muted)] inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border sm:h-auto sm:w-auto sm:rounded-md sm:px-4 sm:py-1.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] hover:text-[var(--color-ink)]"
           >
-            Sign out
+            <LogOut className="h-[14px] w-[14px] sm:hidden" />
+            <span className="hidden sm:inline">Sign out</span>
           </button>
           <ThemeToggle />
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 pb-16 pt-6 sm:px-8 sm:pt-8">
+      <main className="mx-auto max-w-5xl px-4 pb-16 pt-4 sm:px-8 sm:pt-8">
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={() => navigate("/files")}
-            className="flex shrink-0 items-center gap-1.5 rounded px-1.5 py-1.5 text-[13px] text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)]"
+            className="hidden shrink-0 items-center gap-1.5 rounded px-1.5 py-1.5 text-[13px] text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/40 hover:text-[var(--color-ink)] sm:flex"
           >
             <ArrowLeft className="h-[13px] w-[13px]" />
             Files
           </button>
-          <h1 className="order-first w-full text-[20px] font-semibold sm:order-none sm:w-auto sm:flex-1">
+          <h1 className="order-first w-full px-1 text-[22px] font-semibold sm:order-none sm:w-auto sm:flex-1 sm:px-0 sm:text-[20px]">
             Trash
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <button
               type="button"
               onClick={handleRestoreAll}
               disabled={isEmpty || restoreAllMutation.isPending}
-              className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] px-3.5 py-2 text-[13px] font-medium hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2 text-[13px] font-medium hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:flex-none sm:justify-start sm:rounded-md sm:bg-transparent"
             >
               {restoreAllMutation.isPending ? (
                 <Loader2 className="h-[14px] w-[14px] animate-spin" />
@@ -219,7 +228,7 @@ export default function TrashPage() {
               type="button"
               onClick={() => setEmptyDialogOpen(true)}
               disabled={isEmpty}
-              className="flex items-center gap-1.5 rounded-md border border-[var(--color-danger-border)] px-3.5 py-2 text-[13px] font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[var(--color-danger-border)] px-3.5 py-2 text-[13px] font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger-soft)] disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:flex-none sm:justify-start sm:rounded-md"
             >
               <Trash2 className="h-[14px] w-[14px]" />
               Empty trash
@@ -235,7 +244,7 @@ export default function TrashPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5"
+              className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3.5 py-2 sm:mt-6 sm:gap-3 sm:rounded-md sm:px-4 sm:py-2.5"
             >
               <div className="flex items-center gap-3">
                 <button
@@ -277,7 +286,7 @@ export default function TrashPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="mt-6 flex flex-wrap items-center gap-3"
+              className="mt-3 flex flex-wrap items-center gap-2 sm:mt-6 sm:gap-3"
             >
               <div className="relative min-w-[160px] flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-[var(--color-ink-muted)]" />
@@ -286,13 +295,13 @@ export default function TrashPage() {
                   value={nameInput}
                   onChange={(event) => handleSearchChange(event.target.value)}
                   placeholder="Search trash"
-                  className="h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] py-0 pl-9 pr-3 text-[13px] placeholder:text-[13px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:h-auto sm:py-2 sm:text-[12px]"
+                  className="h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-0 pl-9 pr-3 text-[13px] placeholder:text-[13px] outline-none focus:border-[var(--color-accent)] focus:ring-[3px] focus:ring-[var(--color-accent-soft)] sm:h-auto sm:rounded-md sm:py-2 sm:text-[12px]"
                 />
               </div>
               <select
                 value={typeFilter}
                 onChange={(event) => setTypeFilter(event.target.value as "" | "file" | "folder")}
-                className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[13px] outline-none focus:border-[var(--color-accent)]"
+                className="h-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-0 text-[13px] outline-none focus:border-[var(--color-accent)] sm:h-auto sm:rounded-md sm:py-2"
               >
                 {TYPE_FILTERS.map((option) => (
                   <option key={option.label} value={option.value}>
@@ -306,7 +315,7 @@ export default function TrashPage() {
                 disabled={isEmpty}
                 aria-label="Select items"
                 title="Select"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:w-9 sm:rounded-md sm:bg-transparent"
               >
                 <CheckSquare className="h-[14px] w-[14px]" />
               </button>
@@ -314,7 +323,7 @@ export default function TrashPage() {
           )}
         </AnimatePresence>
 
-        <div className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:px-5">
+        <div className="mt-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-1 shadow-[0_1px_2px_rgba(40,52,78,0.05)] sm:mt-5 sm:rounded-lg sm:px-5 sm:shadow-none">
           <AnimatePresence mode="wait" initial={false}>
           {trashQuery.isLoading ? (
             <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
@@ -327,7 +336,7 @@ export default function TrashPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="flex flex-col items-center justify-center gap-2 py-20 text-center"
+              className="flex flex-col items-center justify-center gap-2 py-14 text-center sm:py-20"
             >
               <AlertCircle className="h-6 w-6 text-[var(--color-danger)]" />
               <p className="text-[14px] text-[var(--color-danger)]">
@@ -341,10 +350,12 @@ export default function TrashPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="flex flex-col items-center justify-center px-4 py-24 text-center"
+              className="flex flex-col items-center justify-center px-4 py-16 text-center sm:py-24"
             >
-              <Trash2 className="h-8 w-8 text-[var(--color-ink-muted)]" />
-              <h2 className="mt-4 text-[18px]">Trash is empty</h2>
+              <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent sm:text-[var(--color-ink-muted)]">
+                <Trash2 className="h-7 w-7 sm:h-8 sm:w-8" />
+              </span>
+              <h2 className="mt-5 text-[18px] sm:mt-4">Trash is empty</h2>
               <p className="mt-1.5 text-[14px] text-[var(--color-ink-muted)]">
                 Items you delete will show up here for you to restore.
               </p>
@@ -359,7 +370,7 @@ export default function TrashPage() {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.18, delay: Math.min(index, 10) * 0.025, ease: "easeOut" }}
-                    className="flex items-center gap-1 border-b border-[var(--color-border)] py-3.5 last:border-0"
+                    className="flex items-center gap-1 border-b border-[var(--color-border)] px-2 py-2.5 last:border-0 active:bg-[var(--color-border)]/30 sm:px-0 sm:py-3.5 sm:active:bg-transparent"
                   >
                     {selectionMode && (
                       <input
@@ -367,7 +378,7 @@ export default function TrashPage() {
                         checked={isSelected}
                         onChange={() => toggleFolderSelected(folder)}
                         aria-label={`Select ${folder.name}`}
-                        className="mr-3 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+                        className="mr-3 h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4 accent-[var(--color-accent)]"
                       />
                     )}
                     <button
@@ -375,10 +386,12 @@ export default function TrashPage() {
                       onClick={() => (selectionMode ? toggleFolderSelected(folder) : undefined)}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <Folder className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent sm:text-[var(--color-ink-muted)]">
+                        <Folder className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+                      </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[15px]">{folder.name}</span>
-                        <span className="block truncate text-[12px] text-[var(--color-ink-muted)]">
+                        <span className="block truncate text-[14px] font-medium sm:text-[15px] sm:font-normal">{folder.name}</span>
+                        <span className="block truncate text-[11px] text-[var(--color-ink-muted)] sm:text-[12px]">
                           Trashed {folder.deletedAt ? format(new Date(folder.deletedAt), "MMM d, yyyy") : "—"}
                         </span>
                       </span>
@@ -390,9 +403,9 @@ export default function TrashPage() {
                         disabled={restoreFolderMutation.isPending}
                         aria-label={`Restore ${folder.name}`}
                         title="Restore"
-                        className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)] disabled:opacity-50"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-muted)] active:bg-[var(--color-border)]/60 disabled:opacity-50 sm:h-auto sm:w-auto sm:p-2.5 sm:hover:bg-[var(--color-border)]/60 sm:hover:text-[var(--color-ink)]"
                       >
-                        <RotateCcw className="h-5 w-5" />
+                        <RotateCcw className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
                       </button>
                     )}
                   </motion.li>
@@ -407,7 +420,7 @@ export default function TrashPage() {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.18, delay: Math.min(folders.length + index, 10) * 0.025, ease: "easeOut" }}
-                    className="flex items-center gap-1 border-b border-[var(--color-border)] py-3.5 last:border-0"
+                    className="flex items-center gap-1 border-b border-[var(--color-border)] px-2 py-2.5 last:border-0 active:bg-[var(--color-border)]/30 sm:px-0 sm:py-3.5 sm:active:bg-transparent"
                   >
                     {selectionMode && (
                       <input
@@ -415,7 +428,7 @@ export default function TrashPage() {
                         checked={isSelected}
                         onChange={() => toggleFileSelected(file)}
                         aria-label={`Select ${file.name}`}
-                        className="mr-3 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+                        className="mr-3 h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4 accent-[var(--color-accent)]"
                       />
                     )}
                     <button
@@ -423,10 +436,12 @@ export default function TrashPage() {
                       onClick={() => (selectionMode ? toggleFileSelected(file) : undefined)}
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <Icon className="h-5 w-5 shrink-0 text-[var(--color-ink-muted)]" />
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-border)]/50 text-[var(--color-ink-muted)] sm:h-auto sm:w-auto sm:rounded-none sm:bg-transparent">
+                        <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+                      </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[15px]">{file.name}</span>
-                        <span className="block truncate text-[12px] text-[var(--color-ink-muted)]">
+                        <span className="block truncate text-[14px] font-medium sm:text-[15px] sm:font-normal">{file.name}</span>
+                        <span className="block truncate text-[11px] text-[var(--color-ink-muted)] sm:text-[12px]">
                           {formatBytes(file.size)} · Trashed{" "}
                           {file.deletedAt ? format(new Date(file.deletedAt), "MMM d, yyyy") : "—"}
                         </span>
@@ -439,9 +454,9 @@ export default function TrashPage() {
                         disabled={restoreFileMutation.isPending}
                         aria-label={`Restore ${file.name}`}
                         title="Restore"
-                        className="shrink-0 rounded-full p-2.5 text-[var(--color-ink-muted)] hover:bg-[var(--color-border)]/60 hover:text-[var(--color-ink)] disabled:opacity-50"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--color-ink-muted)] active:bg-[var(--color-border)]/60 disabled:opacity-50 sm:h-auto sm:w-auto sm:p-2.5 sm:hover:bg-[var(--color-border)]/60 sm:hover:text-[var(--color-ink)]"
                       >
-                        <RotateCcw className="h-5 w-5" />
+                        <RotateCcw className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
                       </button>
                     )}
                   </motion.li>

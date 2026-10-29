@@ -11,7 +11,7 @@ export default function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="relative inline-flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+      className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-xl sm:h-8 sm:w-8 sm:rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span

@@ -22,7 +22,7 @@ export default function MobileSidebar({ isAdmin, onClose, onOpenTrash, onNewUser
   }, [onClose]);
 
   const itemClass =
-    "flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-[15px] text-[var(--color-ink)] hover:bg-[var(--color-border)]/30";
+    "flex w-full items-center gap-3.5 rounded-2xl px-2.5 py-2.5 text-left text-[15px] font-medium text-[var(--color-ink)] active:bg-[var(--color-border)]/40";
 
   return (
     <motion.div
@@ -38,25 +38,25 @@ export default function MobileSidebar({ isAdmin, onClose, onOpenTrash, onNewUser
         animate={{ x: 0 }}
         exit={{ x: "-100%", transition: { duration: 0.18 } }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex h-full w-[78%] max-w-[300px] flex-col border-r border-[var(--color-border)] bg-[var(--color-bg)] pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] shadow-xl"
+        className="flex h-full w-[84%] max-w-[320px] flex-col rounded-r-3xl border-r border-[var(--color-border)] bg-[var(--color-bg)] pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] shadow-xl"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label="Menu"
       >
-        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 pb-3">
-          <Logo className="text-[18px]" />
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 pb-4">
+          <Logo className="text-[20px]" />
           <button
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] active:text-[var(--color-ink)]"
           >
             <X className="h-[18px] w-[18px]" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2 py-3">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
           <button
             type="button"
             className={itemClass}
@@ -65,7 +65,9 @@ export default function MobileSidebar({ isAdmin, onClose, onOpenTrash, onNewUser
               onOpenTrash();
             }}
           >
-            <Trash2 className="h-[18px] w-[18px] shrink-0 text-[var(--color-ink-muted)]" />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)]">
+              <Trash2 className="h-[18px] w-[18px]" />
+            </span>
             Trash
           </button>
           {isAdmin && (
@@ -77,13 +79,15 @@ export default function MobileSidebar({ isAdmin, onClose, onOpenTrash, onNewUser
                 onNewUser();
               }}
             >
-              <UserPlus className="h-[18px] w-[18px] shrink-0 text-[var(--color-ink-muted)]" />
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)]">
+                <UserPlus className="h-[18px] w-[18px]" />
+              </span>
               New user
             </button>
           )}
         </nav>
 
-        <div className="px-4">
+        <div className="px-5">
           <StorageIndicator variant="panel" />
         </div>
       </motion.aside>

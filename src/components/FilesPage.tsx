@@ -754,6 +754,7 @@ export default function FilesPage() {
             onClose={() => setSidebarOpen(false)}
             onOpenTrash={() => navigate("/trash")}
             onNewUser={() => setModal({ type: "register-user" })}
+            onSignOut={() => clearSession()}
           />
         )}
       </AnimatePresence>

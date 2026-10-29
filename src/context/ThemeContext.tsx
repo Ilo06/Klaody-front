@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
 
 type Theme = "light" | "dark";
 
@@ -30,6 +31,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem(STORAGE_KEY, theme);
+
+    // Android app: keep the status/navigation bar icons readable against the app's own theme
+    // (the theme toggle can differ from the phone's system theme).
+    if (Capacitor.isNativePlatform()) {
+      SystemBars.setStyle({
+        // Dark = light icons for a dark background, Light = dark icons for a light background.
+        style: theme === "dark" ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+      }).catch(() => undefined);
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme((current) => (current === "dark" ? "light" : "dark"));

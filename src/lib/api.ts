@@ -2,6 +2,7 @@ import axios, { type AxiosProgressEvent } from "axios";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
+import { FileTransfer } from "@capacitor/file-transfer";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
@@ -150,23 +151,23 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Let cancelled requests (e.g. an aborted upload) pass through unchanged
-    // so callers can tell a deliberate cancel apart from a real failure.
-    if (axios.isCancel(error)) {
-      return Promise.reject(error);
-    }
+                                    (error) => {
+                                      // Let cancelled requests (e.g. an aborted upload) pass through unchanged
+                                      // so callers can tell a deliberate cancel apart from a real failure.
+                                      if (axios.isCancel(error)) {
+                                        return Promise.reject(error);
+                                      }
 
-    const status = error.response?.status ?? 0;
-    if (status === 401) {
-      window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
-    }
+                                      const status = error.response?.status ?? 0;
+                                      if (status === 401) {
+                                        window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+                                      }
 
-    const message =
-      (error.response?.data as { error?: string } | undefined)?.error ??
-      (status === 0 ? "Could not reach the server" : "Something went wrong");
-    return Promise.reject(new ApiError(status, message));
-  },
+                                      const message =
+                                      (error.response?.data as { error?: string } | undefined)?.error ??
+                                      (status === 0 ? "Could not reach the server" : "Something went wrong");
+                                      return Promise.reject(new ApiError(status, message));
+                                    },
 );
 
 export function isCancelledUpload(error: unknown): boolean {
@@ -403,6 +404,19 @@ export async function fetchImagePreviewBlob(id: string, width: number): Promise<
 }
 
 export async function downloadFile(id: string, fallbackName: string): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    // Téléchargement natif : pas de Blob/base64 en mémoire, pas de CORS.
+    const safeName = fallbackName.replace(/[^\w.\-]/g, "_");
+    const { uri } = await Filesystem.getUri({ path: safeName, directory: Directory.Cache });
+    await FileTransfer.downloadFile({
+      url: `${API_BASE_URL}/files/${id}`,
+      path: uri,
+      headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` },
+    });
+    await Share.share({ title: safeName, url: uri });
+    return;
+  }
+
   const response = await fetchFileResponse(id);
   const filename = parseFilenameFromDisposition(response.headers["content-disposition"]) ?? fallbackName;
   await triggerBrowserDownload(response.data, filename);

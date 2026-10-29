@@ -28,6 +28,9 @@ jobs:
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
 
+      - name: Generate Android icons and splash
+        run: npx capacitor-assets generate --android
+
       - run: npx cap sync android
 
       - name: Build debug APK

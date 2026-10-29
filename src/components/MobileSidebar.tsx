@@ -1,18 +1,22 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { Trash2, UserPlus, X } from "lucide-react";
+import { LogOut, Moon, Sun, Trash2, UserPlus, X } from "lucide-react";
 import Logo from "./Logo";
 import StorageIndicator from "./StorageIndicator";
+import { useTheme } from "../context/ThemeContext";
 
 interface MobileSidebarProps {
   isAdmin: boolean;
   onClose: () => void;
   onOpenTrash: () => void;
   onNewUser: () => void;
+  onSignOut: () => void;
 }
 
 /** Slide-in drawer from the left. Mobile only (the trigger is `sm:hidden`). */
-export default function MobileSidebar({ isAdmin, onClose, onOpenTrash, onNewUser }: MobileSidebarProps) {
+export default function MobileSidebar({ isAdmin, onClose, onOpenTrash, onNewUser, onSignOut }: MobileSidebarProps) {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -86,6 +90,31 @@ export default function MobileSidebar({ isAdmin, onClose, onOpenTrash, onNewUser
             </button>
           )}
         </nav>
+
+        {/* Icon-only actions, side by side, just above the storage card. */}
+        <div className="mx-5 mb-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            title={isDark ? "Light mode" : "Dark mode"}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors active:border-[var(--color-border-strong)] active:text-[var(--color-ink)]"
+          >
+            {isDark ? <Sun className="h-[16px] w-[16px]" /> : <Moon className="h-[16px] w-[16px]" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onSignOut();
+            }}
+            aria-label="Sign out"
+            title="Sign out"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors active:border-[var(--color-danger-border)] active:bg-[var(--color-danger-soft)] active:text-[var(--color-danger)]"
+          >
+            <LogOut className="h-[16px] w-[16px]" />
+          </button>
+        </div>
 
         <div className="px-5">
           <StorageIndicator variant="panel" />

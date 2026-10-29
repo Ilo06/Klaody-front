@@ -471,12 +471,12 @@ export default function FilesPage() {
           <Menu className="h-[16px] w-[16px]" />
         </button>
         <Logo className="text-[19px] sm:hidden" />
-        {/* Mobile: same width as the menu button so the logo stays centered. */}
+        
         <div className="h-10 w-10 sm:hidden" aria-hidden="true" />
         <div className="hidden sm:block">
           <Logo className="text-[20px]" />
         </div>
-        {/* Mobile: sign out and theme live in the MobileSidebar. */}
+        
         <div className="hidden items-center gap-4 sm:flex">
           <button
             type="button"

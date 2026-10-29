@@ -7,7 +7,6 @@ import {
   ArrowUpDown,
   CheckSquare,
   FolderPlus,
-  LogOut,
   Menu,
   Plus,
   Search,
@@ -472,19 +471,21 @@ export default function FilesPage() {
           <Menu className="h-[16px] w-[16px]" />
         </button>
         <Logo className="text-[19px] sm:hidden" />
+        {/* Mobile: same width as the menu button so the logo stays centered. */}
+        <div className="h-10 w-10 sm:hidden" aria-hidden="true" />
         <div className="hidden sm:block">
           <Logo className="text-[20px]" />
         </div>
-        <div className="flex items-center gap-2 sm:gap-4">
+        {/* Mobile: sign out and theme live in the MobileSidebar. */}
+        <div className="hidden items-center gap-4 sm:flex">
           <button
             type="button"
             onClick={() => clearSession()}
             aria-label="Sign out"
             title="Sign out"
-            className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-0 text-[13px] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:h-auto sm:w-auto sm:rounded-md sm:px-4 sm:py-1.5"
+            className="inline-flex cursor-pointer items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-1.5 text-[13px] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
           >
-            <LogOut className="h-[14px] w-[14px] sm:hidden" />
-            <span className="hidden sm:inline">Sign out</span>
+            Sign out
           </button>
           <ThemeToggle />
         </div>
@@ -768,6 +769,7 @@ export default function FilesPage() {
             onClose={() => setSidebarOpen(false)}
             onOpenTrash={() => navigate("/trash")}
             onNewUser={() => setModal({ type: "register-user" })}
+            onSignOut={() => clearSession()}
           />
         )}
       </AnimatePresence>

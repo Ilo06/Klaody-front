@@ -26,7 +26,7 @@ export default function StorageIndicator({ variant = "pill" }: { variant?: "pill
           type="button"
           onClick={() => setBreakdownOpen(true)}
           aria-label="Show storage breakdown by file type"
-          className="block w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left hover:border-[var(--color-border-strong)]"
+          className="block w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left shadow-[0_1px_2px_rgba(40,52,78,0.05)] active:border-[var(--color-border-strong)]"
         >
           <div className="flex items-baseline justify-between text-[13px]">
             <span className="font-medium text-[var(--color-ink)]">{usableLabel} free</span>

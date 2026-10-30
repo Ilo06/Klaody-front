@@ -46,7 +46,7 @@ export default function FileDetailsPanel({ file, onClose }: { file: FileMetadata
   return (
     <aside
       aria-label="Image details"
-      className="absolute inset-x-0 bottom-0 z-20 flex max-h-[65%] flex-col rounded-t-xl border-t border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl sm:static sm:max-h-none sm:w-72 sm:shrink-0 sm:rounded-none sm:border-l sm:border-t-0 sm:shadow-none"
+      className="absolute inset-x-0 bottom-0 z-20 flex max-h-[65%] flex-col rounded-t-3xl border-t border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl sm:static sm:max-h-none sm:w-72 sm:shrink-0 sm:rounded-none sm:border-l sm:border-t-0 sm:shadow-none"
     >
       <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-2.5">
         <h2 className="text-[14px] font-medium">Details</h2>

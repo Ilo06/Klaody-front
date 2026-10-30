@@ -61,6 +61,7 @@ import {
 import { useRegisterUser } from "../hooks/useUsers";
 import Logo from "../components/Logo";
 import MobileSidebar from "../components/MobileSidebar";
+import DownloadProgress, { type DownloadState } from "../components/DownloadProgress";
 
 type ModalState =
   | { type: "new-folder" }
@@ -165,6 +166,7 @@ export default function FilesPage() {
   const [shareResult, setShareResult] = useState<ShareResponse | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [download, setDownload] = useState<DownloadState | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [selectionMode, setSelectionMode] = useState(false);
@@ -448,10 +450,17 @@ export default function FilesPage() {
   };
 
   const handleDownload = async (file: FileMetadata) => {
+    if (download) return; // one download at a time
+    setDownload({ name: file.name, percent: null });
     try {
-      await downloadFile(file.id, file.name);
+      const result = await downloadFile(file.id, file.name, file.mimeType, (percent) =>
+        setDownload({ name: file.name, percent }),
+      );
+      if (result === "saved") showToast("Saved to Downloads");
     } catch (err) {
       showToast(errorMessage(err, "Could not download the file"), "error");
+    } finally {
+      setDownload(null);
     }
   };
 
@@ -760,6 +769,8 @@ export default function FilesPage() {
           </div>
         </>
       )}
+
+      <DownloadProgress download={download} />
 
       <AnimatePresence>
         {sidebarOpen && (

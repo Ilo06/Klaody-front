@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertCircle, ArrowLeft, CheckSquare, Folder, Loader2, LogOut, RotateCcw, Search, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckSquare, Folder, Loader2, Menu, RotateCcw, Search, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import ThemeToggle from "../components/ThemeToggle";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -20,6 +20,7 @@ import {
 import { fileIcon } from "../lib/fileIcon";
 import { formatBytes } from "../lib/format";
 import Logo from "../components/Logo";
+import MobileSidebar from "../components/MobileSidebar";
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback;
@@ -39,6 +40,7 @@ export default function TrashPage() {
   const [nameInput, setNameInput] = useState("");
   const [nameFilter, setNameFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState<"" | "file" | "folder">("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [emptyDialogOpen, setEmptyDialogOpen] = useState(false);
   const [emptyError, setEmptyError] = useState<string | null>(null);
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -174,24 +176,32 @@ export default function TrashPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b-0 border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:border-b sm:px-8 sm:py-5">
         <button
           type="button"
-          onClick={() => navigate("/files")}
-          aria-label="Back to files"
-          className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:hidden"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+          aria-expanded={sidebarOpen}
+          className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:hidden"
         >
-          <ArrowLeft className="h-[16px] w-[16px]" />
+          <Menu className="h-[16px] w-[16px]" />
         </button>
-        <Logo className="text-[19px] sm:text-[20px]" />
-        <div className="flex items-center gap-2 sm:gap-4">
+        <Logo className="text-[19px] sm:hidden" />
+        {/* Mobile: same width as the menu button so the logo stays centered. */}
+        <div className="h-10 w-10 sm:hidden" aria-hidden="true" />
+        <div className="hidden sm:block">
+          <Logo className="text-[20px]" />
+        </div>
+        {/* Mobile: sign out and theme live in the MobileSidebar. */}
+        <div className="hidden items-center gap-4 sm:flex">
           <button
             type="button"
             onClick={() => clearSession()}
-            className="text-[13px] text-[var(--color-ink-muted)] inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border sm:h-auto sm:w-auto sm:rounded-md sm:px-4 sm:py-1.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] hover:text-[var(--color-ink)]"
+            aria-label="Sign out"
+            title="Sign out"
+            className="inline-flex cursor-pointer items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-1.5 text-[13px] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
           >
-            <LogOut className="h-[14px] w-[14px] sm:hidden" />
-            <span className="hidden sm:inline">Sign out</span>
+            Sign out
           </button>
           <ThemeToggle />
         </div>
@@ -467,6 +477,17 @@ export default function TrashPage() {
           </AnimatePresence>
         </div>
       </main>
+
+      <AnimatePresence>
+        {sidebarOpen && (
+          <MobileSidebar
+            key="mobile-sidebar"
+            onClose={() => setSidebarOpen(false)}
+            onOpenFiles={() => navigate("/files")}
+            onSignOut={() => clearSession()}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {emptyDialogOpen && (

@@ -460,13 +460,13 @@ export default function FilesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:px-8 sm:py-5">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b-0 border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:border-b sm:px-8 sm:py-5">
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
           aria-label="Open menu"
           aria-expanded={sidebarOpen}
-          className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-[var(--color-bg)] bg-[var(--color-bg)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-border-strong)] hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:hidden"
+          className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] sm:hidden"
         >
           <Menu className="h-[16px] w-[16px]" />
         </button>

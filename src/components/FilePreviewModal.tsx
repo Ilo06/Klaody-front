@@ -170,16 +170,16 @@ export default function FilePreviewModal({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="fixed inset-0 z-50 flex flex-col bg-[var(--color-surface)] sm:items-center sm:justify-center sm:bg-black/50 sm:p-6"
+      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 pt-[max(1rem,env(safe-area-inset-top))] sm:items-center sm:justify-center sm:bg-black/50 sm:p-6"
     >
       <motion.div
         initial={{ opacity: 0, y: 12, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.98, transition: { duration: 0.15 } }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="flex h-full w-full flex-col overflow-hidden sm:h-[85vh] sm:max-h-[85vh] sm:w-[90vw] sm:max-w-4xl sm:rounded-xl sm:border sm:border-[var(--color-border)] sm:bg-[var(--color-surface)] sm:shadow-2xl"
+        className="flex h-full w-full flex-col overflow-hidden rounded-t-3xl border-t border-[var(--color-border)] bg-[var(--color-surface)] sm:h-[85vh] sm:max-h-[85vh] sm:w-[90vw] sm:max-w-4xl sm:rounded-xl sm:border sm:shadow-2xl"
       >
-        <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-4 sm:pb-3 sm:pt-4">
+        <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-3 pb-2 pt-3 sm:px-4 sm:pb-3 sm:pt-4">
           <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
             <Icon className="h-[18px] w-[18px] shrink-0 text-[var(--color-ink-muted)]" />
             <span className="truncate text-[14px] sm:text-[15px]">{file.name}</span>

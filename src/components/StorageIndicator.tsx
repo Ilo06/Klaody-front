@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
 import { useStorageInfo } from "../hooks/useFileBrowser";
 import { formatBytes } from "../lib/format";
 import StorageBreakdownModal from "./StorageBreakdownModal";
@@ -22,26 +23,30 @@ export default function StorageIndicator({ variant = "pill" }: { variant?: "pill
   if (variant === "panel") {
     return (
       <>
-        <button
-          type="button"
-          onClick={() => setBreakdownOpen(true)}
-          aria-label="Show storage breakdown by file type"
-          className="block w-full rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left shadow-[0_1px_2px_rgba(40,52,78,0.05)] active:border-[var(--color-border-strong)]"
-        >
-          <div className="flex items-baseline justify-between text-[13px]">
-            <span className="font-medium text-[var(--color-ink)]">{usableLabel} free</span>
-            <span className="text-[var(--color-ink-muted)]">{percentUsed}% used</span>
+        <div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-[15px] font-medium text-[var(--color-ink)]">Storage</span>
+            <span className="text-[13px] text-[var(--color-ink-muted)]">{percentUsed}% used</span>
           </div>
-          <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[var(--color-border)]">
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--color-border)]">
             <div
               className="h-full rounded-full bg-[var(--color-accent)] transition-[width]"
               style={{ width: `${percentUsed}%` }}
             />
           </div>
-          <p className="mt-2 text-[12px] text-[var(--color-ink-muted)]">
-            {formatBytes(usedBytes)} of {formatBytes(data.totalBytes)} · See breakdown
+          <p className="mt-3 text-[13px] text-[var(--color-ink-muted)]">
+            {formatBytes(usedBytes)} of {formatBytes(data.totalBytes)}
           </p>
-        </button>
+          <button
+            type="button"
+            onClick={() => setBreakdownOpen(true)}
+            aria-label="Show storage breakdown by file type"
+            className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-[var(--color-accent)] active:opacity-70"
+          >
+            View breakdown
+            <ArrowUpRight className="h-[13px] w-[13px]" />
+          </button>
+        </div>
         {modal}
       </>
     );

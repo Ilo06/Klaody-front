@@ -9,6 +9,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    registerPlugin(DownloadsPlugin.class);
     SplashScreen.installSplashScreen(this);
     // Required by Capacitor 8 (SystemBars insetsHandling != "disable"): draws the app behind
     // the status/navigation bars and makes them transparent instead of opaque white/black bands.

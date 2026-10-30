@@ -1,8 +1,14 @@
 import axios, { type AxiosProgressEvent } from "axios";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { FileTransfer } from "@capacitor/file-transfer";
+
+/** Native Android plugin (DownloadsPlugin.java): copies a file into the public Downloads folder. */
+interface DownloadsPlugin {
+  saveToDownloads(options: { path: string; name: string; mimeType?: string }): Promise<{ uri: string }>;
+}
+const Downloads = registerPlugin<DownloadsPlugin>("Downloads");
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
@@ -403,23 +409,67 @@ export async function fetchImagePreviewBlob(id: string, width: number): Promise<
   return data;
 }
 
-export async function downloadFile(id: string, fallbackName: string): Promise<void> {
+/** "saved" = written to the phone's Downloads folder, "shared" = handed to the share sheet, "browser" = web download. */
+export type DownloadResult = "saved" | "shared" | "browser";
+
+/** `percent` is 0-100, or null while the total size is unknown. */
+export type DownloadProgressHandler = (percent: number | null) => void;
+
+export async function downloadFile(
+  id: string,
+  fallbackName: string,
+  mimeType?: string,
+  onProgress?: DownloadProgressHandler,
+): Promise<DownloadResult> {
   if (Capacitor.isNativePlatform()) {
     // Téléchargement natif : pas de Blob/base64 en mémoire, pas de CORS.
     const safeName = fallbackName.replace(/[^\w.\-]/g, "_");
     const { uri } = await Filesystem.getUri({ path: safeName, directory: Directory.Cache });
-    await FileTransfer.downloadFile({
-      url: `${API_BASE_URL}/files/${id}`,
-      path: uri,
-      headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` },
+    const url = `${API_BASE_URL}/files/${id}`;
+    onProgress?.(null);
+    let lastPercent = -1;
+    const listener = await FileTransfer.addListener("progress", (event) => {
+      if (event.type !== "download" || event.url !== url) return;
+      if (!event.lengthComputable || event.contentLength <= 0) return;
+      const percent = Math.min(100, Math.round((event.bytes / event.contentLength) * 100));
+      if (percent !== lastPercent) {
+        lastPercent = percent;
+        onProgress?.(percent);
+      }
     });
-    await Share.share({ title: safeName, url: uri });
-    return;
+    try {
+      await FileTransfer.downloadFile({
+        url,
+        path: uri,
+        headers: { Authorization: `Bearer ${localStorage.getItem(TOKEN_KEY)}` },
+        progress: true,
+      });
+    } finally {
+      await listener.remove();
+    }
+    onProgress?.(100);
+
+    // Android 10+: copy straight into the public Downloads folder (like a browser would).
+    try {
+      await Downloads.saveToDownloads({ path: uri, name: fallbackName, mimeType });
+      return "saved";
+    } catch {
+      // Old Android / plugin missing: fall back to the share sheet.
+    }
+
+    try {
+      await Share.share({ title: safeName, url: uri });
+    } catch (err) {
+      // Closing the share sheet rejects with "Share canceled" — that's not a download error.
+      if (!/cancel/i.test(err instanceof Error ? err.message : String(err))) throw err;
+    }
+    return "shared";
   }
 
   const response = await fetchFileResponse(id);
   const filename = parseFilenameFromDisposition(response.headers["content-disposition"]) ?? fallbackName;
   await triggerBrowserDownload(response.data, filename);
+  return "browser";
 }
 
 export async function renameFile(id: string, name: string): Promise<FileMetadata> {

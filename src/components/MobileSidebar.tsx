@@ -56,7 +56,7 @@ export default function MobileSidebar({
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -24, transition: { duration: 0.15 } }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="flex h-full w-[84%] max-w-[320px] flex-col rounded-r-3xl border-r border-[var(--color-border)] bg-[var(--color-bg)] pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] shadow-xl"
+        className="flex h-full w-[84%] max-w-[320px] transform-gpu flex-col rounded-r-3xl border-r border-[var(--color-border)] bg-[var(--color-bg)] pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] will-change-[transform,opacity]"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"

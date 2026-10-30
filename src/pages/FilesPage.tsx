@@ -469,7 +469,7 @@ export default function FilesPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)]">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b-0 border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:border-b sm:px-8 sm:py-5">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b-0 border-[var(--color-border)] bg-[var(--color-bg)] sm:bg-[var(--color-bg)]/95 px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] sm:backdrop-blur sm:border-b sm:px-8 sm:py-5">
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}

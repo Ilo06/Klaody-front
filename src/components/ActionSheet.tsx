@@ -33,7 +33,7 @@ export default function ActionSheet({ title, actions, onClose }: ActionSheetProp
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 16, transition: { duration: 0.15 } }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="w-full overflow-hidden rounded-t-3xl border-t border-[var(--color-border)] bg-[var(--color-surface)] pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-xl sm:max-w-sm sm:rounded-xl sm:border"
+        className="w-full transform-gpu overflow-hidden rounded-t-3xl border-t border-[var(--color-border)] bg-[var(--color-surface)] pb-[max(0.5rem,env(safe-area-inset-bottom))] will-change-[transform,opacity] sm:max-w-sm sm:rounded-xl sm:border sm:shadow-xl"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"

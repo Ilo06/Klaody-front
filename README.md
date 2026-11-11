@@ -65,7 +65,7 @@ A fast, self-hosted file storage app. **klaody** is the web and Android client: 
 ### Prerequisites
 
 - Node.js 22 or later
-- A running klaody backend API (default `http://localhost:3000`)
+- A running klaody backend API (default `http://localhost:3000`) 
 
 ### Install and run
 
